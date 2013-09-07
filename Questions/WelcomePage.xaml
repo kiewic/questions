@@ -1,0 +1,24 @@
+﻿<Page
+    x:Class="Questions.WelcomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Questions"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    
+    <Page.Resources>
+    </Page.Resources>
+
+    <Grid Background="{StaticResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="2*" />
+            <RowDefinition Height="1*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" TextAlignment="Center"  VerticalAlignment="Center" Style="{StaticResource BlockStyle}" Margin="30" >Hello!</TextBlock>
+        <TextBlock Grid.Row="1" TextAlignment="Center" VerticalAlignment="Center" Style="{StaticResource BlockStyle}" Margin="20" TextWrapping="Wrap" Padding="50"><Bold>Questions</Bold> app is easy to use. Just add tags and browse questions.</TextBlock>
+        <Button Grid.Row="2" x:Name="AddButton" HorizontalAlignment="Center" VerticalAlignment="Center" Click="AddButton_Click" Style="{StaticResource ButtonStyle}">Add a Tag Now</Button>
+    </Grid>
+</Page>

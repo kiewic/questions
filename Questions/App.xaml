@@ -1,0 +1,31 @@
+﻿<Application
+    x:Class="Questions.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Questions"
+    RequestedTheme="Light">
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- 
+                    Styles that define common aspects of the platform look and feel
+                    Required by Visual Studio project and item templates
+                 -->
+                <ResourceDictionary Source="Common/StandardStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- App specific styles. -->
+            <Style x:Key="BlockStyle" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="Assets/Finger Paint.ttf#Finger Paint" />
+                <Setter Property="FontSize" Value="77" />
+            </Style>
+            <Style x:Key="ButtonStyle" TargetType="Button">
+                <Setter Property="FontFamily" Value="Assets/Finger Paint.ttf#Finger Paint" />
+                <Setter Property="FontSize" Value="77" />
+                <Setter Property="Background" Value="#FF3333" />
+            </Style>
+
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
