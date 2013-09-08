@@ -127,7 +127,7 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
-    <Content Include="Assets\Finger Paint.ttf" />
+    <Content Include="Assets\FingerPaint.ttf" />
     <None Include="Package.StoreAssociation.xml" />
     <None Include="Questions_StoreKey.pfx" />
     <None Include="Questions_TemporaryKey.pfx" />
