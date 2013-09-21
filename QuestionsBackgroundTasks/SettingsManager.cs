@@ -19,7 +19,7 @@ namespace QuestionsBackgroundTasks
         private static object settingsFileLock = new object();
         private static StorageFile settingsFile;
 
-        public static async Task<string> LoadSettingsAsync()
+        public static async Task<string> LoadAsync()
         {
             await LockAsync();
 
@@ -56,7 +56,7 @@ namespace QuestionsBackgroundTasks
             return "";
         }
 
-        public static async Task SaveSettingsAsync(string content)
+        public static async Task SaveAsync(string content)
         {
             await LockAsync();
 

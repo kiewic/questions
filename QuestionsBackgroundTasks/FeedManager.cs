@@ -16,7 +16,7 @@ namespace QuestionsBackgroundTasks
     {
         private static SyndicationClient client = new SyndicationClient();
 
-        public static IAsyncOperation<bool> UpdateQuestions()
+        public static IAsyncAction UpdateQuestions()
         {
             return AsyncInfo.Run(async (cancellationToken) =>
             {
@@ -24,22 +24,27 @@ namespace QuestionsBackgroundTasks
 
                 string query = ContentManager.ConcatenateAllTags();
 
-                return await UpdateQuestions(query);
+                await UpdateQuestions(query, false);
             });
         }
 
-        public static IAsyncOperation<bool> UpdateQuestions(string query)
+        // 1. Load settings.
+        // 2. query -> Retrieve feed.
+        // 3. skipLastAllRead -> Add questions.
+        // 4. Sort Questions (for tile and badge).
+        // 5. Update tile.
+        // 6. Update badge.
+        // TODO: Maybe buzz words check here.
+        public static IAsyncAction UpdateQuestions(string query, bool skipLastAllRead)
         {
             return AsyncInfo.Run(async (cancellationToken) =>
             {
                 await ContentManager.LoadAsync();
 
-                ContentManager.ClearQuestions();
-
                 if (String.IsNullOrEmpty(query))
                 {
                     // There is nothing to query.
-                    return true;
+                    return;
                 }
 
                 Uri uri;
@@ -56,15 +61,14 @@ namespace QuestionsBackgroundTasks
                 catch (Exception ex)
                 {
                     Debug.WriteLine(ex);
-                    return false;
+                    throw;
                 }
 
-                ContentManager.AddQuestions(feed);
+                ContentManager.AddQuestions(feed, skipLastAllRead);
 
                 IList<BindableQuestion> list = ContentManager.GetSortedQuestions();
                 UpdateTileWithQuestions(list);
-
-                return true;
+                UpdateBadge(list.Count);
             });
         }
 
@@ -121,6 +125,21 @@ namespace QuestionsBackgroundTasks
             {
                 Debug.WriteLine(ex.Message);
             }
+        }
+
+        public static void UpdateBadge(int count)
+        {
+            XmlDocument badgeXml = BadgeUpdateManager.GetTemplateContent(BadgeTemplateType.BadgeNumber);
+            XmlElement badgeElement = (XmlElement)badgeXml.SelectSingleNode("/badge");
+            badgeElement.SetAttribute("value", count.ToString());
+            BadgeNotification badge = new BadgeNotification(badgeXml);
+            BadgeUpdateManager.CreateBadgeUpdaterForApplication().Update(badge);
+        }
+
+        public static void ClearTileAndBadge()
+        {
+            TileUpdateManager.CreateTileUpdaterForApplication().Clear();
+            BadgeUpdateManager.CreateBadgeUpdaterForApplication().Clear();
         }
     }
 }

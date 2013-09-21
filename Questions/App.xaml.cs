@@ -72,7 +72,7 @@ namespace Questions
                 Type initialPage = typeof(ItemsPage);
                 if (isNewApp)
                 {
-                    initialPage = typeof(WelcomePage);
+                    initialPage = typeof(TutorialPage);
                 }
 
                 if (!rootFrame.Navigate(initialPage, args.Arguments))
@@ -84,19 +84,27 @@ namespace Questions
             Window.Current.Activate();
 
             // Add privacy policy command.
-            SettingsPane.GetForCurrentView().CommandsRequested += AddPrivacyPolicyCommand;
+            SettingsPane.GetForCurrentView().CommandsRequested += AddSettingsCommand;
         }
 
-        private void AddPrivacyPolicyCommand(SettingsPane sender, SettingsPaneCommandsRequestedEventArgs args)
+        private void AddSettingsCommand(SettingsPane sender, SettingsPaneCommandsRequestedEventArgs args)
         {
+            SettingsCommand tutorialCommand = new SettingsCommand("Tutorial", "See Tutorial", SeeTurorial);
             SettingsCommand privacyPolicyCommand = new SettingsCommand("PrivacyPolicy", "Privacy Policy", LaunchPrivacyPolicyUrl);
+            args.Request.ApplicationCommands.Add(tutorialCommand);
             args.Request.ApplicationCommands.Add(privacyPolicyCommand);
+        }
+
+        private void SeeTurorial(IUICommand command)
+        {
+            Frame rootFrame = Window.Current.Content as Frame;
+            rootFrame.Navigate(typeof(TutorialPage));
         }
 
         async void LaunchPrivacyPolicyUrl(IUICommand uiCommand)
         {
-            Uri privacyPolicyUrl = new Uri("http://kiewic.com/privacypolicy");
-            var result = await Windows.System.Launcher.LaunchUriAsync(privacyPolicyUrl);
+            Uri privacyPolicyUri = new Uri("http://kiewic.com/privacypolicy");
+            var result = await Windows.System.Launcher.LaunchUriAsync(privacyPolicyUri);
         }
 
         /// <summary>

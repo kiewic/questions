@@ -18,9 +18,28 @@ namespace QuestionsBackgroundTasks
         private static JsonObject tagsCollection;
         private static JsonObject questionsCollection;
 
+        public static DateTimeOffset LastAllRead
+        {
+            get
+            {
+                CheckSettingsAreLoaded();
+
+                if (rootObject.ContainsKey("LastAllRead"))
+                {
+                    return DateTimeOffset.Parse(rootObject.GetNamedString("LastAllRead"));
+                }
+
+                return DateTime.MinValue;
+            }
+            set
+            {
+                rootObject.SetNamedValue("LastAllRead", JsonValue.CreateStringValue(value.ToString()));
+            }
+        }
+
         public ContentManager()
         {
-            Debug.WriteLine("Constructor being called!");
+            Debug.WriteLine("ContentManager constructor called.");
         }
 
         public static IAsyncAction LoadAsync()
@@ -33,19 +52,19 @@ namespace QuestionsBackgroundTasks
                     return;
                 }
 
-                string jsonString = await SettingsManager.LoadSettingsAsync();
+                string jsonString = await SettingsManager.LoadAsync();
 
                 if (!JsonObject.TryParse(jsonString, out rootObject))
                 {
                     Debug.WriteLine("Invalid JSON string: {0}", jsonString);
-                    InitializeEmptyObjects();
+                    InitializeEmptyCollections();
                     return;
                 }
 
                 if (!rootObject.ContainsKey("Tags") || !rootObject.ContainsKey("Questions"))
                 {
                     Debug.WriteLine("Tampered JSON string.");
-                    InitializeEmptyObjects();
+                    InitializeEmptyCollections();
                     return;
                 }
 
@@ -54,18 +73,21 @@ namespace QuestionsBackgroundTasks
             });
         }
 
-        private static void InitializeEmptyObjects()
+        public static IAsyncAction SaveAsync()
+        {
+            return AsyncInfo.Run(async (cancellationToken) =>
+            {
+                await SettingsManager.SaveAsync(rootObject.Stringify());
+            });
+        }
+
+        private static void InitializeEmptyCollections()
         {
             rootObject = new JsonObject();
             tagsCollection = new JsonObject();
             questionsCollection = new JsonObject();
             rootObject.Add("Tags", tagsCollection);
             rootObject.Add("Questions", questionsCollection);
-        }
-
-        private static async Task SaveAsync()
-        {
-            await SettingsManager.SaveSettingsAsync(rootObject.Stringify());
         }
 
         public static async void AddTag(ListView listView, string tag)
@@ -93,7 +115,7 @@ namespace QuestionsBackgroundTasks
             ClearQuestions();
         }
 
-        public static async void LoadTags(ListView listView)
+        public static async void DisplayTags(ListView listView)
         {
             await LoadAsync();
 
@@ -105,10 +127,7 @@ namespace QuestionsBackgroundTasks
 
         public static string ConcatenateAllTags()
         {
-            if (questionsCollection == null)
-            {
-                throw new Exception("Settings not loaded.");
-            }
+            CheckSettingsAreLoaded();
 
             StringBuilder builder = new StringBuilder();
             foreach (string tag in tagsCollection.Keys)
@@ -122,13 +141,19 @@ namespace QuestionsBackgroundTasks
             return builder.ToString();
         }
 
-        public static async void AddQuestions(SyndicationFeed feed)
+        public static async void AddQuestions(SyndicationFeed feed, bool skipLastAllRead)
         {
-            await LoadAsync();
+            CheckSettingsAreLoaded();
+
+            DateTimeOffset lastAllRead = LastAllRead;
 
             foreach (SyndicationItem item in feed.Items)
             {
-                ContentManager.AddQuestion(item);
+                Debug.WriteLine("PublishedDate: {0}", item.PublishedDate);
+                if (skipLastAllRead || DateTimeOffset.Compare(item.PublishedDate.DateTime, lastAllRead) > 0)
+                {
+                    AddQuestion(item);
+                }
             }
 
             await SaveAsync();
@@ -146,7 +171,9 @@ namespace QuestionsBackgroundTasks
             JsonObject questionObject = new JsonObject();
 
             questionObject.Add("Title", JsonValue.CreateStringValue(item.Title.Text));
-            questionObject.Add("PubDate", JsonValue.CreateStringValue(item.PublishedDate.ToLocalTime().ToString()));
+
+            // TODO: Do we need to use PublihedDate.ToLocalTime(), or can we just work with the standard time?
+            questionObject.Add("PubDate", JsonValue.CreateStringValue(item.PublishedDate.ToString()));
 
             if (item.Links.Count > 0)
             {
@@ -165,17 +192,21 @@ namespace QuestionsBackgroundTasks
             questionsCollection.Add(item.Id, questionObject);
         }
 
-        public static void LoadQuestions(ListView listView, IList<BindableQuestion> list)
+        public static void ClearQuestions()
+        {
+            // Replace the collection with an empty object.
+            questionsCollection.Clear();
+        }
+
+        public static void DisplayQuestions(ListView listView, IList<BindableQuestion> list)
         {
             listView.ItemsSource = list;
         }
 
+        // TODO: I fthis is an expensive operation, maybe we should consider to cache the result.
         public static IList<BindableQuestion> GetSortedQuestions()
         {
-            if (questionsCollection == null)
-            {
-                throw new Exception("Settings not loaded.");
-            }
+            CheckSettingsAreLoaded();
 
             List<BindableQuestion> list = new List<BindableQuestion>();
             foreach (IJsonValue jsonValue in questionsCollection.Values)
@@ -191,21 +222,10 @@ namespace QuestionsBackgroundTasks
             list.Sort((a, b) =>
             {
                 // Multiply by -1 to sort in ascending order.
-                return DateTime.Compare(a.PubDate, b.PubDate) * -1;
+                return DateTimeOffset.Compare(a.PubDate, b.PubDate) * -1;
             });
 
             return list;
-        }
-
-        internal static void ClearQuestions()
-        {
-            if (questionsCollection == null)
-            {
-                throw new Exception("Settings not loaded.");
-            }
-
-            // Replace the collection with an empty object.
-            questionsCollection = new JsonObject();
         }
 
         public static bool TryCreateUri(string query, out Uri uri)
@@ -220,9 +240,16 @@ namespace QuestionsBackgroundTasks
             {
                 await LoadAsync();
 
-                return (questionsCollection.Count == 0) ? true : false;
+                return (tagsCollection.Count == 0) ? true : false;
             });
         }
 
+        private static void CheckSettingsAreLoaded()
+        {
+            if (rootObject == null)
+            {
+                throw new Exception("Settings not loaded.");
+            }
+        }
     }
 }

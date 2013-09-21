@@ -1,4 +1,5 @@
-﻿using QuestionsBackgroundTasks;
+﻿using Questions.Common;
+using QuestionsBackgroundTasks;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -24,11 +25,34 @@ namespace Questions
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class ItemsPage : Page
+    public sealed partial class ItemsPage : LayoutAwarePage
     {
         public ItemsPage()
         {
             this.InitializeComponent();
+        }
+
+        /// <summary>
+        /// Populates the page with content passed during navigation.  Any saved state is also
+        /// provided when recreating a page from a prior session.
+        /// </summary>
+        /// <param name="navigationParameter">The parameter value passed to
+        /// <see cref="Frame.Navigate(Type, Object)"/> when this page was initially requested.
+        /// </param>
+        /// <param name="pageState">A dictionary of state preserved by this page during an earlier
+        /// session.  This will be null the first time a page is visited.</param>
+        protected override void LoadState(Object navigationParameter, Dictionary<String, Object> pageState)
+        {
+        }
+
+        /// <summary>
+        /// Preserves state associated with this page in case the application is suspended or the
+        /// page is discarded from the navigation cache.  Values must conform to the serialization
+        /// requirements of <see cref="SuspensionManager.SessionState"/>.
+        /// </summary>
+        /// <param name="pageState">An empty dictionary to be populated with serializable state.</param>
+        protected override void SaveState(Dictionary<String, Object> pageState)
+        {
         }
 
         /// <summary>
@@ -38,22 +62,18 @@ namespace Questions
         /// property is typically used to configure the page.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
+            base.OnNavigatedTo(e);
+
             RegisterBackgroundTask();
-            LoadQuestions();
+            DisplayQuestions();
         }
 
-        private async void LoadQuestions()
+        private async void DisplayQuestions()
         {
             await ContentManager.LoadAsync();
 
-            bool isEmpty = await ContentManager.IsEmptyAsync();
-            if (isEmpty)
-            {
-                await FeedManager.UpdateQuestions();
-            }
-
             IList<BindableQuestion> list = ContentManager.GetSortedQuestions();
-            ContentManager.LoadQuestions(QuestionsView, list);
+            ContentManager.DisplayQuestions(QuestionsView, list);
         }
 
         private async void RegisterBackgroundTask()
@@ -82,7 +102,7 @@ namespace Questions
             {
                 Debug.WriteLine(args.InstanceId + " completed on " + DateTime.Now);
 #pragma warning disable 4014
-                Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => LoadQuestions());
+                Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => DisplayQuestions());
 #pragma warning restore 4014
             };
         }
@@ -107,14 +127,15 @@ namespace Questions
 
         private async void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
-            bool result = await FeedManager.UpdateQuestions();
-            if (result)
+            try
             {
-                LoadQuestions();
+                await FeedManager.UpdateQuestions();
+                DisplayQuestions();
             }
-            else
+            catch (Exception ex)
             {
                 // TODO: Display an error message.
+                Debug.WriteLine(ex);
             }
         }
 
@@ -122,6 +143,27 @@ namespace Questions
         {
             BindableQuestion question = e.ClickedItem as BindableQuestion;
             await Launcher.LaunchUriAsync(question.Link);
+        }
+
+        private async void AllReadButton_Click(object sender, RoutedEventArgs e)
+        {
+            IList<BindableQuestion> list = ContentManager.GetSortedQuestions();
+            if (list.Count == 0)
+            {
+                // There are no question, there is nothing to do.
+                return;
+            }
+
+            DateTimeOffset newLastAllRead = list[0].PubDate;
+            ContentManager.LastAllRead = newLastAllRead;
+
+            ContentManager.ClearQuestions();
+            list.Clear();
+            ContentManager.DisplayQuestions(QuestionsView, list);
+
+            await ContentManager.SaveAsync();
+
+            FeedManager.ClearTileAndBadge();
         }
     }
 }

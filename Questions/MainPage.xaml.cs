@@ -42,13 +42,14 @@ namespace Questions
         /// property is typically used to configure the page.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            ContentManager.LoadTags(TagsView);
+            ContentManager.DisplayTags(TagsView);
         }
 
         private async void AddButton_Click(object sender, RoutedEventArgs e)
         {
             String tag = TagBox.Text.Trim();
             String tagEncoded = WebUtility.UrlEncode(tag);
+
             Uri uri;
             if (!ContentManager.TryCreateUri(tagEncoded, out uri))
             {
@@ -56,29 +57,20 @@ namespace Questions
                 return;
             }
 
-            SyndicationFeed feed = null;
             try
             {
-                feed = await client.RetrieveFeedAsync(uri);
-
-                Debug.WriteLine(feed.Title.Text);
+                await FeedManager.UpdateQuestions(tagEncoded, true);
 
                 String successMessage = "Great! Now, we will keep you updated with " + tag + " questions.";
-
-                if (feed.Items.Count > 0)
-                {
-                    successMessage += " E.g.: " + feed.Items[0].Title.Text;
-                    FeedManager.UpdateTile(feed.Items[0].Title.Text);
-                }
 
                 SetStatus(successMessage, true);
 
                 ContentManager.AddTag(TagsView, tag);
-                ContentManager.AddQuestions(feed);
             }
             catch (Exception ex)
             {
-                if (ex.HResult == -2145844844)
+                const int E_HTTP_NOT_FOUND = -2145844844;
+                if (ex.HResult == E_HTTP_NOT_FOUND)
                 {
                     SetStatus("That tag does not exist. Try a different tag, e.g.: windows-runtime", false);
                 }

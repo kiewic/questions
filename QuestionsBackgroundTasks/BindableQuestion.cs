@@ -24,11 +24,11 @@ namespace QuestionsBackgroundTasks
             }
         }
 
-        internal DateTime PubDate
+        public DateTimeOffset PubDate
         {
             get
             {
-                return DateTime.Parse(jsonObject.GetNamedString("PubDate"));
+                return DateTimeOffset.Parse(jsonObject.GetNamedString("PubDate"));
             }
         }
 

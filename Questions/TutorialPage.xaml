@@ -1,0 +1,116 @@
+﻿<Page
+    x:Class="Questions.TutorialPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Questions"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <Style x:Key="SlideStyle" TargetType="StackPanel">
+            <!-- Add 200 extra to height and 100 extra to width. -->
+            <Setter Property="Height" Value="546" />
+            <Setter Property="Width" Value="873" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="Visibility" Value="Visible" />
+        </Style>
+        <Style x:Key="TutorialRichStyle" TargetType="RichTextBlock">
+            <Setter Property="FontFamily" Value="Assets/Finger Paint.ttf#Finger Paint" />
+            <Setter Property="FontSize" Value="30" />
+            <Setter Property="Margin" Value="20" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Visibility" Value="Visible" />
+        </Style>
+        <Style x:Key="TutorialLinkStyle" TargetType="HyperlinkButton">
+            <Setter Property="FontFamily" Value="Assets/Finger Paint.ttf#Finger Paint" />
+            <Setter Property="FontSize" Value="30" />
+            <Setter Property="Margin" Value="0,0,0,-16" />
+            <Setter Property="Foreground" Value="DarkTurquoise" />
+        </Style>
+        <Style x:Key="TutorialLinkImageStyle" TargetType="Image">
+            <Setter Property="Height" Value="346" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="Visibility" Value="Visible" />
+        </Style>
+        <Style x:Key="ExternalLinkStyle" TargetType="Image">
+            <Setter Property="Height" Value="20" />
+            <Setter Property="Margin" Value="-6,-4,0,8" />
+            <Setter Property="VerticalAlignment" Value="Bottom" />
+        </Style>
+        <Style x:Key="TutorialButtonStyle" TargetType="Button">
+            <Setter Property="FontFamily" Value="Assets/Finger Paint.ttf#Finger Paint" />
+            <Setter Property="FontSize" Value="55" />
+            <Setter Property="Background" Value="#FF3333" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+    </Page.Resources>
+
+    <Border Background="{StaticResource ApplicationPageBackgroundThemeBrush}" Padding="20">
+        <Grid x:Name="TutorialGrid">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="50" /><!-- 50 is hte button height. -->
+            </Grid.RowDefinitions>
+
+            <ScrollViewer Grid.Row="1" x:Name="TutorialViewer" Height="546" Width="873"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Auto"
+                VerticalScrollMode="Disabled" HorizontalScrollMode="Auto"
+                ZoomMode="Disabled" HorizontalSnapPointsType="Mandatory" ViewChanged="TutorialViewer_ViewChanged">
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel Style="{StaticResource SlideStyle}">
+                        <RichTextBlock Grid.Row="0" x:Name="Text1" Style="{StaticResource TutorialRichStyle}">
+                            <Paragraph>First, you define content you are interested on.
+                                <InlineUIContainer>
+                                    <StackPanel Orientation="Horizontal">
+                                        <HyperlinkButton x:Name="ContentButton" Click="LearnMoreButton_Click" Style="{StaticResource TutorialLinkStyle}">
+                                            Learn more.
+                                        </HyperlinkButton>
+                                        <Image Source="Assets/Tutorial/ExternalLink.png" Style="{StaticResource ExternalLinkStyle}" />
+                                    </StackPanel>
+                                </InlineUIContainer>
+                            </Paragraph>
+                        </RichTextBlock>
+                        <Image x:Name="Image1" Source="Assets/Tutorial/Tutorial1.png" Style="{StaticResource TutorialLinkImageStyle}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SlideStyle}">
+                        <RichTextBlock Grid.Row="0" x:Name="Text2" Style="{StaticResource TutorialRichStyle}">
+                            <Paragraph>The octopus query the web for you every 15 minutes.</Paragraph>
+                        </RichTextBlock>
+                        <Image x:Name="Image2" Source="Assets/Tutorial/Tutorial2.png" Style="{StaticResource TutorialLinkImageStyle}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SlideStyle}">
+                        <RichTextBlock Grid.Row="0" x:Name="Text3" Style="{StaticResource TutorialRichStyle}">
+                            <Paragraph>
+                                You choose "Questions" as your detailed status app, so you get questions even when you lock your device.
+                                <InlineUIContainer>
+                                    <StackPanel Orientation="Horizontal">
+                                        <HyperlinkButton x:Name="DetailedStatusButton" Click="LearnMoreButton_Click" Style="{StaticResource TutorialLinkStyle}">
+                                            Learn more.
+                                        </HyperlinkButton>
+                                        <Image Source="Assets/Tutorial/ExternalLink.png" Style="{StaticResource ExternalLinkStyle}" />
+                                    </StackPanel>
+                                </InlineUIContainer>
+                            </Paragraph>
+                        </RichTextBlock>
+                        <Image x:Name="Image3" Source="Assets/Tutorial/Tutorial3.png" Style="{StaticResource TutorialLinkImageStyle}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SlideStyle}">
+                        <RichTextBlock Grid.Row="0" x:Name="Text4" Style="{StaticResource TutorialRichStyle}">
+                            <Paragraph>Then, you browse a bunch of questions.</Paragraph>
+                        </RichTextBlock>
+                        <Image x:Name="Image4" Source="Assets/Tutorial/Tutorial4.png" Style="{StaticResource TutorialLinkImageStyle}"/>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Button Grid.Row="2" x:Name="NextButton" Click="NextButton_Click" Style="{StaticResource TutorialButtonStyle}">Next</Button>
+            <Button Grid.Row="3" x:Name="SkipButton" Click="SkipButton_Click" Style="{StaticResource TutorialButtonStyle}" Background="White" Foreground="DarkTurquoise" FontSize="24">Skip. Go to app now.</Button>
+        </Grid>
+    </Border>
+</Page>

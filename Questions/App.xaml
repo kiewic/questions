@@ -14,18 +14,6 @@
                  -->
                 <ResourceDictionary Source="Common/StandardStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-
-            <!-- App specific styles. -->
-            <Style x:Key="BlockStyle" TargetType="TextBlock">
-                <Setter Property="FontFamily" Value="Assets/Finger Paint.ttf#Finger Paint" />
-                <Setter Property="FontSize" Value="77" />
-            </Style>
-            <Style x:Key="ButtonStyle" TargetType="Button">
-                <Setter Property="FontFamily" Value="Assets/Finger Paint.ttf#Finger Paint" />
-                <Setter Property="FontSize" Value="77" />
-                <Setter Property="Background" Value="#FF3333" />
-            </Style>
-
         </ResourceDictionary>
     </Application.Resources>
 </Application>
