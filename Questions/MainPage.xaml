@@ -9,72 +9,47 @@
     mc:Ignorable="d">
 
     <Page.Resources>
-        <Style x:Key="ColoredButtonStyle" TargetType="Button">
-            <Setter Property="FontSize" Value="25" />
-        </Style>
-        <Style x:Key="ErrorBorder" TargetType="Border">
-            <Setter Property="BorderBrush" Value="#FF3333" />
-            <Setter Property="Background" Value="#FFD5D5" />
-        </Style>
-        <Style x:Key="ErrorBlock" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#FF3333" />
-        </Style>
-        <Style x:Key="SuccessBorder" TargetType="Border">
-            <Setter Property="BorderBrush" Value="#339900" />
-            <Setter Property="Background" Value="#C6FFC6" />
-        </Style>
-        <Style x:Key="SuccessBlock" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#339900" />
-        </Style>
+        <DataTemplate x:Key="WideWebsite">
+            <Grid x:Name="Foo" HorizontalAlignment="Stretch" Margin="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Image Grid.Column="0" Width="50" Height="50" Margin="0,0,20,0" Source="Assets/IconPLaceholder.png" />
+                <Image Grid.Column="0" Width="50" Height="50" Margin="0,0,20,0" Source="{Binding IconUrl}" />
+                <StackPanel Grid.Column="1">
+                    <TextBlock FontSize="18" Text="{Binding Name}" />
+                    <TextBlock FontSize="14" Text="{Binding Tags}" />
+                    <TextBlock FontSize="10" Text="{Binding}" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
     </Page.Resources>
-    
-    <Page.BottomAppBar>
-        <AppBar Margin="0" Padding="-2">
-            <StackPanel Orientation="Horizontal" Background="Fuchsia" Margin="0">
-                <Button x:Name="DeleteButton" Style="{StaticResource DeleteAppBarButtonStyle}" Tag="Tags" Click="DeleteButton_Click"/>
-            </StackPanel>
-        </AppBar>
-    </Page.BottomAppBar>
 
-    <Border Background="{StaticResource ApplicationPageBackgroundThemeBrush}">
-        <Grid  Margin="25">
+    <Border Background="{StaticResource ApplicationPageBackgroundThemeBrush}" Padding="25">
+        <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="auto" />
-                <RowDefinition Height="auto" />
-                <RowDefinition Height="auto" />
                 <RowDefinition Height="auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="auto" />
             </Grid.RowDefinitions>
-            <Border x:Name="StatusBorder" Grid.Row="0" Margin="0,0,0,20" BorderThickness="2" Padding="10" Style="{StaticResource SuccessBorder}">
-                <TextBlock x:Name="StatusBlock" FontSize="16" Style="{StaticResource SuccessBlock}">
-                    Tag name can be anything like: c++11, windows-store-apps, javascript, html5, android, asp.net-mvc,
-                    sql-server, c#, objective-c, entity-framework, regex, node.js, jquery, php, mysql, .net, facebook,
-                    git, wordpress, etc.
-                </TextBlock>
-            </Border>
-            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,20" HorizontalAlignment="Center">
-                <!-- Add a tag, e.g. c++ or windows-runtime. -->
-                <TextBlock VerticalAlignment="Center" Margin="0,0,20,0" FontSize="25">Tag name:</TextBlock>
-                <TextBox VerticalContentAlignment="Center" FontSize="25" x:Name="TagBox" Width="300"></TextBox>
-                <Button x:Name="AddButton" Margin="20,0,0,0" Style="{StaticResource ColoredButtonStyle}" Click="AddButton_Click">Add</Button>
-            </StackPanel>
-            <TextBlock Grid.Row="3" TextAlignment="Center" Margin="0,0,0,20" FontSize="25">These are your tags:</TextBlock>
-            <Border Grid.Row="4" BorderBrush="Black" BorderThickness="3" HorizontalAlignment="Center">
-                <ListView x:Name="TagsView" SelectionMode="Multiple" MinWidth="200" HorizontalAlignment="Center">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock TextAlignment="Center" FontSize="25" Text="{Binding}" />
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
+            <TextBlock Grid.Row="0" TextAlignment="Center" Margin="0,0,0,20" FontSize="25">These are your sources, we retrieve questions from here:</TextBlock>
+            <Border Grid.Row="1" BorderBrush="Black" BorderThickness="3">
+                <ListView x:Name="WebsitesView" ItemTemplate="{StaticResource WideWebsite}" SelectionChanged="WebsitesView_SelectionChanged">
+                    <!-- Keeping this for future reference.-->
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">
-                            <Setter Property="HorizontalContentAlignment" Value="Center" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                         </Style>
                     </ListView.ItemContainerStyle>
                 </ListView>
             </Border>
-            <Button Grid.Row="5" x:Name="DoneButton" Margin="0,20,0,0" HorizontalAlignment="Center" Style="{StaticResource ColoredButtonStyle}" Click="DoneButton_Click">Done</Button>
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button x:Name="AddSiteButton" Style="{StaticResource SettingsButton}" Click="AddSiteButton_Click">Add Site</Button>
+                <Button x:Name="EditTagsButton" Style="{StaticResource SettingsButton}" Click="EditTagsButton_Click" Visibility="Collapsed">Edit Tags</Button>
+                <Button x:Name="DeleteSiteButton" Style="{StaticResource SettingsButton}" Click="DeleteSiteButton_Click" Visibility="Collapsed">Delete Site</Button>
+                <Button x:Name="DoneButton" Style="{StaticResource SettingsButton}" Click="DoneButton_Click">Done</Button>
+            </StackPanel>
         </Grid>
     </Border>
 </Page>

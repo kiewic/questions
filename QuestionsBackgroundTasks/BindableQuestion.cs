@@ -9,18 +9,26 @@ namespace QuestionsBackgroundTasks
 {
     public sealed class BindableQuestion
     {
-        private JsonObject jsonObject;
+        PowerpuffJsonObject json;
 
         public BindableQuestion(JsonObject jsonObject)
         {
-            this.jsonObject = jsonObject;
+            json = new PowerpuffJsonObject(jsonObject);
+        }
+
+        public string Website
+        {
+            get
+            {
+                return json.GetNamedString("Website");
+            }
         }
 
         public string Title
         {
             get
             {
-                return jsonObject.GetNamedString("Title");
+                return json.GetNamedString("Title");
             }
         }
 
@@ -28,7 +36,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return DateTimeOffset.Parse(jsonObject.GetNamedString("PubDate"));
+                return DateTimeOffset.Parse(json.GetNamedString("PubDate"));
             }
         }
 
@@ -36,7 +44,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return new Uri(jsonObject.GetNamedString("Link"));
+                return new Uri(json.GetNamedString("Link"));
             }
         }
 

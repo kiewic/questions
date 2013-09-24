@@ -15,8 +15,11 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" FontSize="30" Text="{Binding Title}" />
-                <TextBlock Grid.Column="1" FontSize="30" FontWeight="Bold" Foreground="DarkGray" Text="{Binding PubDateDiff}" />
+                <StackPanel Grid.Column="0" Margin="0">
+                    <TextBlock FontSize="24" Text="{Binding Title}" />
+                    <TextBlock FontSize="12" Foreground="DarkGray" Text="{Binding Website}" />
+                </StackPanel>
+                <TextBlock Grid.Column="1" FontSize="28" FontWeight="Bold" Foreground="DarkGray" Text="{Binding PubDateDiff}" />
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="NarrowQuestion">
@@ -28,8 +31,17 @@
                 <TextBlock Grid.Column="0" FontSize="20" TextWrapping="Wrap" Text="{Binding Title}" />
             </Grid>
         </DataTemplate>
+        <Style x:Key="StatusBlock" TargetType="TextBlock">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Setter Property="FontSize" Value="40" />
+            <Setter Property="Foreground" Value="LightGray" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="Margin" Value="50" />
+        </Style>
     </Page.Resources>
-    
+
     <Page.BottomAppBar>
         <AppBar Margin="0" Padding="-2">
             <StackPanel Orientation="Horizontal" Background="Fuchsia" Margin="0">
@@ -41,17 +53,20 @@
 
     <Grid x:Name="QuestionsGrid" Background="{StaticResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
-        <ListView Grid.Row="0" x:Name="QuestionsView" ItemClick="QuestionsView_ItemClick" IsItemClickEnabled="True" SelectionMode="None" Padding="30" ItemTemplate="{StaticResource WideQuestion}">
+        <ProgressBar x:Name="LoadingBar" Style="{StaticResource SettingsProgress}"/>
+        <ListView Grid.Row="1" x:Name="QuestionsView" ItemClick="QuestionsView_ItemClick" IsItemClickEnabled="True" SelectionMode="None" Padding="30" ItemTemplate="{StaticResource WideQuestion}">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
                     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                 </Style>
             </ListView.ItemContainerStyle>
         </ListView>
-        <Button Grid.Row="1" HorizontalAlignment="Center" FontSize="30" Click="AllReadButton_Click">Mark All As Read</Button>
+        <TextBlock Grid.Row="1" x:Name="StatusBlock" Style="{StaticResource StatusBlock}">There are no more questions :(</TextBlock>
+        <Button Grid.Row="2" HorizontalAlignment="Center" FontSize="30" Click="AllReadButton_Click">Mark All As Read</Button>
         <VisualStateManager.VisualStateGroups>
             <!-- Visual states reflect the application's view state -->
             <VisualStateGroup x:Name="ApplicationViewStates">
