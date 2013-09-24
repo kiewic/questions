@@ -42,87 +42,50 @@ namespace Questions
         /// property is typically used to configure the page.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            ContentManager.DisplayTags(TagsView);
+            ContentManager.LoadAndDisplayWebsites(WebsitesView);
         }
 
-        private async void AddButton_Click(object sender, RoutedEventArgs e)
+        private void WebsitesView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            String tag = TagBox.Text.Trim();
-            String tagEncoded = WebUtility.UrlEncode(tag);
-
-            Uri uri;
-            if (!ContentManager.TryCreateUri(tagEncoded, out uri))
+            if (WebsitesView.SelectedItem != null)
             {
-                SetStatus("Invalid URI.", false);
-                return;
-            }
-
-            try
-            {
-                await FeedManager.UpdateQuestions(tagEncoded, true);
-
-                String successMessage = "Great! Now, we will keep you updated with " + tag + " questions.";
-
-                SetStatus(successMessage, true);
-
-                ContentManager.AddTag(TagsView, tag);
-            }
-            catch (Exception ex)
-            {
-                const int E_HTTP_NOT_FOUND = -2145844844;
-                if (ex.HResult == E_HTTP_NOT_FOUND)
-                {
-                    SetStatus("That tag does not exist. Try a different tag, e.g.: windows-runtime", false);
-                }
-                else
-                {
-                    SetStatus(ex.Message, false);
-                }
-            }
-        }
-
-        private void SetStatus(string text, bool success)
-        {
-            if (String.IsNullOrEmpty(text))
-            {
-                StatusBlock.Visibility = Visibility.Collapsed;
+                EditTagsButton.Visibility = Visibility.Visible;
+                DeleteSiteButton.Visibility = Visibility.Visible;
             }
             else
             {
-                StatusBlock.Visibility = Visibility.Visible;
-                StatusBlock.Text = text;
+                EditTagsButton.Visibility = Visibility.Collapsed;
+                DeleteSiteButton.Visibility = Visibility.Collapsed;
             }
+        }
 
-            if (success)
+        private void AddSiteButton_Click(object sender, RoutedEventArgs e)
+        {
+            Frame.Navigate(typeof(WebsiteOptionsPage));
+        }
+
+        private void EditTagsButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (WebsitesView.SelectedItem == null)
             {
-                StatusBlock.Style = Resources["SuccessBlock"] as Style;
-                StatusBorder.Style = Resources["SuccessBorder"] as Style;
+                throw new Exception("No website selected.");
             }
-            else
+            Frame.Navigate(typeof(TagOptionsPage), WebsitesView.SelectedItem);
+        }
+
+        private void DeleteSiteButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (WebsitesView.SelectedItem == null)
             {
-                StatusBlock.Style = Resources["ErrorBlock"] as Style;
-                StatusBorder.Style = Resources["ErrorBorder"] as Style;
+                throw new Exception("No website selected.");
             }
+            ContentManager.DeleteWebsiteAndSave(WebsitesView.SelectedItem as BindableWebsite);
+            ContentManager.LoadAndDisplayWebsites(WebsitesView);
         }
 
         private void DoneButton_Click(object sender, RoutedEventArgs e)
         {
             Frame.Navigate(typeof(ItemsPage));
         }
-
-        private void DeleteButton_Click(object sender, RoutedEventArgs e)
-        {
-            List<string> tags = new List<string>();
-            foreach (object selectedItem in TagsView.SelectedItems)
-            {
-                tags.Add(selectedItem as string);
-            }
-
-            foreach (string tag in tags)
-            {
-                ContentManager.DeleteTag(TagsView, tag);
-            }
-        }
-
     }
 }

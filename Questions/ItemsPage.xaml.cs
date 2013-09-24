@@ -65,14 +65,36 @@ namespace Questions
             base.OnNavigatedTo(e);
 
             RegisterBackgroundTask();
-            DisplayQuestions();
+
+            DisplayOrUpdateQuestions(false);
         }
 
-        private async void DisplayQuestions()
+        private async void DisplayOrUpdateQuestions(bool forceUpdate)
         {
             await ContentManager.LoadAsync();
 
-            IList<BindableQuestion> list = ContentManager.GetSortedQuestions();
+            IList<BindableQuestion> list = null;
+            if (!forceUpdate)
+            {
+                list = ContentManager.GetSortedQuestions();
+            }
+
+            if (list == null || list.Count == 0)
+            {
+                // Deleting sites or tags cleans the questions collection. Query again.
+                StatusBlock.Visibility = Visibility.Collapsed;
+                LoadingBar.ShowPaused = false;
+                await FeedManager.UpdateQuestions();
+                LoadingBar.ShowPaused = true;
+
+                list = ContentManager.GetSortedQuestions();
+
+                if (list.Count == 0)
+                {
+                    StatusBlock.Visibility = Visibility.Visible;
+                }
+            }
+
             ContentManager.DisplayQuestions(QuestionsView, list);
         }
 
@@ -102,7 +124,8 @@ namespace Questions
             {
                 Debug.WriteLine(args.InstanceId + " completed on " + DateTime.Now);
 #pragma warning disable 4014
-                Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => DisplayQuestions());
+                // Do not force Update, this method is called just from the backgroun task that updated everything.
+                Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => DisplayOrUpdateQuestions(false));
 #pragma warning restore 4014
             };
         }
@@ -125,12 +148,11 @@ namespace Questions
             Frame.Navigate(typeof(MainPage));
         }
 
-        private async void RefreshButton_Click(object sender, RoutedEventArgs e)
+        private void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                await FeedManager.UpdateQuestions();
-                DisplayQuestions();
+                DisplayOrUpdateQuestions(true);
             }
             catch (Exception ex)
             {
@@ -154,16 +176,19 @@ namespace Questions
                 return;
             }
 
+            // The first question is the most recent.
             DateTimeOffset newLastAllRead = list[0].PubDate;
             ContentManager.LastAllRead = newLastAllRead;
 
+            // Clear questions in the frontend and in the bsckend.
             ContentManager.ClearQuestions();
-            list.Clear();
-            ContentManager.DisplayQuestions(QuestionsView, list);
+            QuestionsView.ItemsSource = null;
 
             await ContentManager.SaveAsync();
 
             FeedManager.ClearTileAndBadge();
+
+            RefreshButton_Click(null, null);
         }
     }
 }

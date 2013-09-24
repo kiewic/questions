@@ -12,10 +12,13 @@ using Windows.Web.Syndication;
 
 namespace QuestionsBackgroundTasks
 {
+    // TODO: Websites and tags does not change that frequently. But questions do.
+    // Consider splitting questions managment from the rest of the settings.
     public sealed class ContentManager
     {
+        private const string settingsFileName = "settings.json";
         private static JsonObject rootObject;
-        private static JsonObject tagsCollection;
+        private static JsonObject websitesCollection;
         private static JsonObject questionsCollection;
 
         public static DateTimeOffset LastAllRead
@@ -52,23 +55,34 @@ namespace QuestionsBackgroundTasks
                     return;
                 }
 
-                string jsonString = await SettingsManager.LoadAsync();
+                string jsonString = await FilesManager.LoadAsync(settingsFileName);
 
                 if (!JsonObject.TryParse(jsonString, out rootObject))
                 {
-                    Debug.WriteLine("Invalid JSON string: {0}", jsonString);
-                    InitializeEmptyCollections();
+                    Debug.WriteLine("Invalid JSON object: {0}", jsonString);
+                    InitializeJsonValues();
                     return;
                 }
 
-                if (!rootObject.ContainsKey("Tags") || !rootObject.ContainsKey("Questions"))
+                // Convert settings from version 1 to version 2.
+                if (!rootObject.ContainsKey("Version"))
                 {
-                    Debug.WriteLine("Tampered JSON string.");
-                    InitializeEmptyCollections();
-                    return;
+                    rootObject.SetNamedValue("Version", JsonValue.CreateStringValue("2"));
+
+                    websitesCollection = new JsonObject();
+                    rootObject.SetNamedValue("Websites", websitesCollection);
+
+                    if (rootObject.ContainsKey("Tags"))
+                    {
+                        JsonObject websiteObject = new JsonObject();
+                        websiteObject.SetNamedValue("Tags", rootObject.GetNamedObject("Tags"));
+                        websitesCollection.SetNamedValue("http://stackoverflow.com", websiteObject);
+
+                        // TODO: Remove Tags object.
+                    }
                 }
 
-                tagsCollection = rootObject.GetNamedObject("Tags");
+                websitesCollection = rootObject.GetNamedObject("Websites");
                 questionsCollection = rootObject.GetNamedObject("Questions");
             });
         }
@@ -77,57 +91,89 @@ namespace QuestionsBackgroundTasks
         {
             return AsyncInfo.Run(async (cancellationToken) =>
             {
-                await SettingsManager.SaveAsync(rootObject.Stringify());
+                await FilesManager.SaveAsync(settingsFileName, rootObject.Stringify());
             });
         }
 
-        private static void InitializeEmptyCollections()
+        private static void InitializeJsonValues()
         {
             rootObject = new JsonObject();
-            tagsCollection = new JsonObject();
+            rootObject.Add("Version", JsonValue.CreateStringValue("2"));
+
+            websitesCollection = new JsonObject();
+            rootObject.Add("Websites", websitesCollection);
+
             questionsCollection = new JsonObject();
-            rootObject.Add("Tags", tagsCollection);
             rootObject.Add("Questions", questionsCollection);
         }
 
-        public static async void AddTag(ListView listView, string tag)
+        public static IAsyncOperation<BindableWebsite> AddWebsiteAndSave(BindableWebsiteOption websiteOption)
         {
-            await LoadAsync();
-
-            if (tagsCollection.ContainsKey(tag))
+            return AsyncInfo.Run(async (cancellationToken) =>
             {
-                // We already have this tag.
-                Debug.WriteLine("Tag repeated: {0}", tag);
-                return;
-            }
+                CheckSettingsAreLoaded();
 
-            JsonValue nullValue = JsonValue.Parse("null");
-            tagsCollection.Add(new KeyValuePair<string, IJsonValue>(tag, nullValue));
-            listView.Items.Add(tag);
+                string websiteSiteUrl = websiteOption.SiteUrl;
+
+                JsonObject websiteObject;
+                if (websitesCollection.ContainsKey(websiteSiteUrl))
+                {
+                    // We already have this website. Nothing to do.
+                    websiteObject = websitesCollection.GetNamedObject(websiteSiteUrl);
+                }
+                else
+                {
+                    websiteObject = new JsonObject();
+                    websiteObject.SetNamedValue("Tags", new JsonObject());
+                    websiteObject.SetNamedValue("Name", JsonValue.CreateStringValue(websiteOption.ToString()));
+                    websiteObject.SetNamedValue("ApiSiteParameter", JsonValue.CreateStringValue(websiteOption.ApiSiteParameter));
+                    websiteObject.SetNamedValue("SiteUrl", JsonValue.CreateStringValue(websiteOption.SiteUrl));
+                    websiteObject.SetNamedValue("IconUrl", JsonValue.CreateStringValue(websiteOption.IconUrl));
+                    websiteObject.SetNamedValue("FaviconUrl", JsonValue.CreateStringValue(websiteOption.FaviconUrl));
+                    websitesCollection.SetNamedValue(websiteSiteUrl, websiteObject);
+                }
+
+                await SaveAsync();
+
+                return new BindableWebsite(websiteObject);
+            });
+        }
+
+        public static async void DeleteWebsiteAndSave(BindableWebsite website)
+        {
+            CheckSettingsAreLoaded();
+
+            websitesCollection.Remove(website.ToString());
+
+            // TODO: Remove only questions containing this website.
+            ClearQuestions();
 
             await SaveAsync();
         }
 
-        public static void DeleteTag(ListView listView, string tag)
+        internal static IEnumerable<string> GetWebsiteKeys()
         {
-            tagsCollection.Remove(tag);
-            listView.Items.Remove(tag);
-            ClearQuestions();
+            return websitesCollection.Keys;
         }
 
-        public static async void DisplayTags(ListView listView)
+        public static async void LoadAndDisplayWebsites(ListView listView)
         {
             await LoadAsync();
 
-            foreach (string key in tagsCollection.Keys)
+            listView.Items.Clear();
+            foreach (IJsonValue jsonValue in websitesCollection.Values)
             {
-                listView.Items.Add(key);
+                var website = new BindableWebsite(jsonValue.GetObject());
+                listView.Items.Add(website);
             }
         }
 
-        public static string ConcatenateAllTags()
+        public static string ConcatenateAllTags(string website)
         {
             CheckSettingsAreLoaded();
+
+            JsonObject websiteObject = websitesCollection.GetNamedObject(website);
+            JsonObject tagsCollection = websiteObject.GetNamedObject("Tags");
 
             StringBuilder builder = new StringBuilder();
             foreach (string tag in tagsCollection.Keys)
@@ -141,7 +187,7 @@ namespace QuestionsBackgroundTasks
             return builder.ToString();
         }
 
-        public static async void AddQuestions(SyndicationFeed feed, bool skipLastAllRead)
+        public static async void AddQuestions(string website, SyndicationFeed feed, bool skipLastAllRead)
         {
             CheckSettingsAreLoaded();
 
@@ -152,7 +198,7 @@ namespace QuestionsBackgroundTasks
                 Debug.WriteLine("PublishedDate: {0}", item.PublishedDate);
                 if (skipLastAllRead || DateTimeOffset.Compare(item.PublishedDate.DateTime, lastAllRead) > 0)
                 {
-                    AddQuestion(item);
+                    AddQuestion(website, item);
                 }
             }
 
@@ -160,7 +206,7 @@ namespace QuestionsBackgroundTasks
         }
 
         // NOTE: Adding a single question does not load or save settings. Good for performance.
-        private static void AddQuestion(SyndicationItem item)
+        private static void AddQuestion(string website, SyndicationItem item)
         {
             if (questionsCollection.ContainsKey(item.Id))
             {
@@ -170,6 +216,7 @@ namespace QuestionsBackgroundTasks
 
             JsonObject questionObject = new JsonObject();
 
+            questionObject.Add("Website", JsonValue.CreateStringValue(website));
             questionObject.Add("Title", JsonValue.CreateStringValue(item.Title.Text));
 
             // TODO: Do we need to use PublihedDate.ToLocalTime(), or can we just work with the standard time?
@@ -228,10 +275,18 @@ namespace QuestionsBackgroundTasks
             return list;
         }
 
-        public static bool TryCreateUri(string query, out Uri uri)
+        public static bool TryCreateUri(string website, string query, out Uri uri)
         {
-            const string uriString = "http://stackoverflow.com/feeds/tag/";
-            return Uri.TryCreate(uriString + query, UriKind.Absolute, out uri);
+            // If the query is empty, return the main feed URI.
+            string uriString = website + "/feeds";
+
+            // If the query is not empty, ask for the feed of the specified tags.
+            if (!String.IsNullOrEmpty(query))
+            {
+                uriString += "/tag/" + query;
+            }
+
+            return Uri.TryCreate(uriString, UriKind.Absolute, out uri);
         }
 
         public static IAsyncOperation<bool> IsEmptyAsync()
@@ -240,7 +295,7 @@ namespace QuestionsBackgroundTasks
             {
                 await LoadAsync();
 
-                return (tagsCollection.Count == 0) ? true : false;
+                return (websitesCollection.Count == 0) ? true : false;
             });
         }
 

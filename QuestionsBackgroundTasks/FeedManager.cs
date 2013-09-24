@@ -21,10 +21,7 @@ namespace QuestionsBackgroundTasks
             return AsyncInfo.Run(async (cancellationToken) =>
             {
                 await ContentManager.LoadAsync();
-
-                string query = ContentManager.ConcatenateAllTags();
-
-                await UpdateQuestions(query, false);
+                await UpdateQuestions(false);
             });
         }
 
@@ -35,36 +32,44 @@ namespace QuestionsBackgroundTasks
         // 5. Update tile.
         // 6. Update badge.
         // TODO: Maybe buzz words check here.
-        public static IAsyncAction UpdateQuestions(string query, bool skipLastAllRead)
+        public static IAsyncAction UpdateQuestions(bool skipLastAllRead)
         {
             return AsyncInfo.Run(async (cancellationToken) =>
             {
                 await ContentManager.LoadAsync();
 
-                if (String.IsNullOrEmpty(query))
+                foreach (string website in ContentManager.GetWebsiteKeys())
                 {
-                    // There is nothing to query.
-                    return;
-                }
+                    string query = ContentManager.ConcatenateAllTags(website);
 
-                Uri uri;
-                if (!ContentManager.TryCreateUri(query, out uri))
-                {
-                    Debugger.Break();
-                }
+                    Uri uri;
+                    if (!ContentManager.TryCreateUri(website, query, out uri))
+                    {
+                        Debugger.Break();
+                    }
 
-                SyndicationFeed feed = null;
-                try
-                {
-                    feed = await client.RetrieveFeedAsync(uri);
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(ex);
-                    throw;
-                }
+                    SyndicationFeed feed = null;
+                    try
+                    {
+                        feed = await client.RetrieveFeedAsync(uri);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(ex);
 
-                ContentManager.AddQuestions(feed, skipLastAllRead);
+                        int hr = ex.HResult;
+                        int facility = (hr & 0x7FFF0000) / 0xFFFF;
+                        const int FACILITY_HTTP = 25;
+
+                        // In case of HTTP error status, we just swallow the exception.
+                        if (facility != FACILITY_HTTP)
+                        {
+                            throw;
+                        }
+                    }
+
+                    ContentManager.AddQuestions(website, feed, skipLastAllRead);
+                }
 
                 IList<BindableQuestion> list = ContentManager.GetSortedQuestions();
                 UpdateTileWithQuestions(list);

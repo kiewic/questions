@@ -99,10 +99,15 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="BindableWebsite.cs" />
+    <Compile Include="PowerpuffJsonObject.cs" />
+    <Compile Include="BindableTagOption.cs" />
+    <Compile Include="BindableWebsiteOption.cs" />
     <Compile Include="ContentManager.cs" />
     <Compile Include="FeedManager.cs" />
-    <Compile Include="SettingsManager.cs" />
+    <Compile Include="FilesManager.cs" />
     <Compile Include="BindableQuestion.cs" />
+    <Compile Include="OptionsManager.cs" />
     <Compile Include="TimerTask.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
