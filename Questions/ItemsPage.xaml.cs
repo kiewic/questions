@@ -71,12 +71,12 @@ namespace Questions
 
         private async void DisplayOrUpdateQuestions(bool forceUpdate)
         {
-            await ContentManager.LoadAsync();
+            await QuestionsManager.LoadAsync();
 
             IList<BindableQuestion> list = null;
             if (!forceUpdate)
             {
-                list = ContentManager.GetSortedQuestions();
+                list = QuestionsManager.GetSortedQuestions();
             }
 
             if (list == null || list.Count == 0)
@@ -87,7 +87,7 @@ namespace Questions
                 await FeedManager.UpdateQuestions();
                 LoadingBar.ShowPaused = true;
 
-                list = ContentManager.GetSortedQuestions();
+                list = QuestionsManager.GetSortedQuestions();
 
                 if (list.Count == 0)
                 {
@@ -95,7 +95,7 @@ namespace Questions
                 }
             }
 
-            ContentManager.DisplayQuestions(QuestionsView, list);
+            QuestionsManager.DisplayQuestions(QuestionsView, list);
         }
 
         private async void RegisterBackgroundTask()
@@ -169,7 +169,7 @@ namespace Questions
 
         private async void AllReadButton_Click(object sender, RoutedEventArgs e)
         {
-            IList<BindableQuestion> list = ContentManager.GetSortedQuestions();
+            IList<BindableQuestion> list = QuestionsManager.GetSortedQuestions();
             if (list.Count == 0)
             {
                 // There are no question, there is nothing to do.
@@ -178,13 +178,13 @@ namespace Questions
 
             // The first question is the most recent.
             DateTimeOffset newLastAllRead = list[0].PubDate;
-            ContentManager.LastAllRead = newLastAllRead;
+            QuestionsManager.LastAllRead = newLastAllRead;
 
             // Clear questions in the frontend and in the bsckend.
-            ContentManager.ClearQuestions();
+            QuestionsManager.ClearQuestions();
             QuestionsView.ItemsSource = null;
 
-            await ContentManager.SaveAsync();
+            await QuestionsManager.SaveAsync();
 
             FeedManager.ClearTileAndBadge();
 

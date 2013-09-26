@@ -37,7 +37,9 @@ namespace QuestionsBackgroundTasks
             return AsyncInfo.Run(async (cancellationToken) =>
             {
                 await ContentManager.LoadAsync();
+                await QuestionsManager.LoadAsync();
 
+                // TODO: query websites in parallel.
                 foreach (string website in ContentManager.GetWebsiteKeys())
                 {
                     string query = ContentManager.ConcatenateAllTags(website);
@@ -68,10 +70,10 @@ namespace QuestionsBackgroundTasks
                         }
                     }
 
-                    ContentManager.AddQuestions(website, feed, skipLastAllRead);
+                    QuestionsManager.AddQuestionsAndSave(website, feed, skipLastAllRead);
                 }
 
-                IList<BindableQuestion> list = ContentManager.GetSortedQuestions();
+                IList<BindableQuestion> list = QuestionsManager.GetSortedQuestions();
                 UpdateTileWithQuestions(list);
                 UpdateBadge(list.Count);
             });

@@ -108,6 +108,7 @@
     <Compile Include="FilesManager.cs" />
     <Compile Include="BindableQuestion.cs" />
     <Compile Include="OptionsManager.cs" />
+    <Compile Include="QuestionsManager.cs" />
     <Compile Include="TimerTask.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

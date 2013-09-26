@@ -12,33 +12,11 @@ using Windows.Web.Syndication;
 
 namespace QuestionsBackgroundTasks
 {
-    // TODO: Websites and tags does not change that frequently. But questions do.
-    // Consider splitting questions managment from the rest of the settings.
     public sealed class ContentManager
     {
         private const string settingsFileName = "settings.json";
         private static JsonObject rootObject;
         private static JsonObject websitesCollection;
-        private static JsonObject questionsCollection;
-
-        public static DateTimeOffset LastAllRead
-        {
-            get
-            {
-                CheckSettingsAreLoaded();
-
-                if (rootObject.ContainsKey("LastAllRead"))
-                {
-                    return DateTimeOffset.Parse(rootObject.GetNamedString("LastAllRead"));
-                }
-
-                return DateTime.MinValue;
-            }
-            set
-            {
-                rootObject.SetNamedValue("LastAllRead", JsonValue.CreateStringValue(value.ToString()));
-            }
-        }
 
         public ContentManager()
         {
@@ -83,7 +61,6 @@ namespace QuestionsBackgroundTasks
                 }
 
                 websitesCollection = rootObject.GetNamedObject("Websites");
-                questionsCollection = rootObject.GetNamedObject("Questions");
             });
         }
 
@@ -102,9 +79,6 @@ namespace QuestionsBackgroundTasks
 
             websitesCollection = new JsonObject();
             rootObject.Add("Websites", websitesCollection);
-
-            questionsCollection = new JsonObject();
-            rootObject.Add("Questions", questionsCollection);
         }
 
         public static IAsyncOperation<BindableWebsite> AddWebsiteAndSave(BindableWebsiteOption websiteOption)
@@ -146,7 +120,7 @@ namespace QuestionsBackgroundTasks
             websitesCollection.Remove(website.ToString());
 
             // TODO: Remove only questions containing this website.
-            ClearQuestions();
+            QuestionsManager.ClearQuestions();
 
             await SaveAsync();
         }
@@ -185,94 +159,6 @@ namespace QuestionsBackgroundTasks
                 builder.Append(WebUtility.UrlEncode(tag));
             }
             return builder.ToString();
-        }
-
-        public static async void AddQuestions(string website, SyndicationFeed feed, bool skipLastAllRead)
-        {
-            CheckSettingsAreLoaded();
-
-            DateTimeOffset lastAllRead = LastAllRead;
-
-            foreach (SyndicationItem item in feed.Items)
-            {
-                Debug.WriteLine("PublishedDate: {0}", item.PublishedDate);
-                if (skipLastAllRead || DateTimeOffset.Compare(item.PublishedDate.DateTime, lastAllRead) > 0)
-                {
-                    AddQuestion(website, item);
-                }
-            }
-
-            await SaveAsync();
-        }
-
-        // NOTE: Adding a single question does not load or save settings. Good for performance.
-        private static void AddQuestion(string website, SyndicationItem item)
-        {
-            if (questionsCollection.ContainsKey(item.Id))
-            {
-                Debug.WriteLine("Question already exists.");
-                return;
-            }
-
-            JsonObject questionObject = new JsonObject();
-
-            questionObject.Add("Website", JsonValue.CreateStringValue(website));
-            questionObject.Add("Title", JsonValue.CreateStringValue(item.Title.Text));
-
-            // TODO: Do we need to use PublihedDate.ToLocalTime(), or can we just work with the standard time?
-            questionObject.Add("PubDate", JsonValue.CreateStringValue(item.PublishedDate.ToString()));
-
-            if (item.Links.Count > 0)
-            {
-                questionObject.Add("Link", JsonValue.CreateStringValue(item.Links[0].Uri.AbsoluteUri));
-            }
-
-            JsonValue nullValue = JsonValue.Parse("null");
-            JsonObject categoriesCollection = new JsonObject();
-            foreach (SyndicationCategory category in item.Categories)
-            {
-                Debug.WriteLine("Category: {0}", category.Term);
-                categoriesCollection.Add(category.Term, nullValue);
-            }
-            questionObject.Add("Categories", categoriesCollection);
-
-            questionsCollection.Add(item.Id, questionObject);
-        }
-
-        public static void ClearQuestions()
-        {
-            // Replace the collection with an empty object.
-            questionsCollection.Clear();
-        }
-
-        public static void DisplayQuestions(ListView listView, IList<BindableQuestion> list)
-        {
-            listView.ItemsSource = list;
-        }
-
-        // TODO: I fthis is an expensive operation, maybe we should consider to cache the result.
-        public static IList<BindableQuestion> GetSortedQuestions()
-        {
-            CheckSettingsAreLoaded();
-
-            List<BindableQuestion> list = new List<BindableQuestion>();
-            foreach (IJsonValue jsonValue in questionsCollection.Values)
-            {
-                JsonObject jsonObject = jsonValue.GetObject();
-
-                BindableQuestion tempQuestion = new BindableQuestion(jsonObject);
-
-                list.Add(tempQuestion);
-            }
-
-            // Sort the items!
-            list.Sort((a, b) =>
-            {
-                // Multiply by -1 to sort in ascending order.
-                return DateTimeOffset.Compare(a.PubDate, b.PubDate) * -1;
-            });
-
-            return list;
         }
 
         public static bool TryCreateUri(string website, string query, out Uri uri)

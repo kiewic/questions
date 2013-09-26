@@ -50,7 +50,7 @@ namespace QuestionsBackgroundTasks
             listView.Items.Remove(tag);
 
             // TODO: Remove only questions containing this tag.
-            ContentManager.ClearQuestions();
+            QuestionsManager.ClearQuestions();
 
             await ContentManager.SaveAsync();
         }
