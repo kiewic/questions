@@ -23,21 +23,20 @@ namespace QuestionsBackgroundTasks
             return json.GetNamedString("SiteUrl");
         }
 
-        public async void AddTagAndSave(ListView listView, BindableTagOption tagOption)
+        public async void AddTagAndSave(ListView listView, string tag)
         {
             JsonObject tagsCollection = json.GetNamedObject("Tags");
 
-            string tag = tagOption.ToString();
             if (tagsCollection.ContainsKey(tag))
             {
                 // We already have this tag.
-                Debug.WriteLine("Tag repeated: {0}", tagOption);
+                Debug.WriteLine("Tag repeated: {0}", tag);
                 return;
             }
 
             JsonValue nullValue = JsonValue.Parse("null");
             tagsCollection.Add(tag, nullValue);
-            listView.Items.Add(tagOption);
+            listView.Items.Add(tag);
 
             await ContentManager.SaveAsync();
         }

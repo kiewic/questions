@@ -44,38 +44,54 @@ namespace QuestionsBackgroundTasks
                 {
                     string query = ContentManager.ConcatenateAllTags(website);
 
-                    Uri uri;
-                    if (!ContentManager.TryCreateUri(website, query, out uri))
-                    {
-                        Debugger.Break();
-                    }
-
-                    SyndicationFeed feed = null;
-                    try
-                    {
-                        feed = await client.RetrieveFeedAsync(uri);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine(ex);
-
-                        int hr = ex.HResult;
-                        int facility = (hr & 0x7FFF0000) / 0xFFFF;
-                        const int FACILITY_HTTP = 25;
-
-                        // In case of HTTP error status, we just swallow the exception.
-                        if (facility != FACILITY_HTTP)
-                        {
-                            throw;
-                        }
-                    }
-
-                    QuestionsManager.AddQuestionsAndSave(website, feed, skipLastAllRead);
+                    await UpdateQuestionsSingleWebsite(website, query, false);
                 }
 
                 IList<BindableQuestion> list = QuestionsManager.GetSortedQuestions();
                 UpdateTileWithQuestions(list);
                 UpdateBadge(list.Count);
+            });
+        }
+
+        public static IAsyncOperation<bool> UpdateQuestionsSingleWebsite(string website, string query, bool skipLastAllRead)
+        {
+            return AsyncInfo.Run(async (cancellationToken) =>
+            {
+                Uri uri;
+                if (!ContentManager.TryCreateUri(website, query, out uri))
+                {
+                    Debugger.Break();
+                }
+
+                SyndicationFeed feed = null;
+                try
+                {
+                    feed = await client.RetrieveFeedAsync(uri);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex);
+
+                    int hr = ex.HResult;
+                    int facility = (hr & 0x7FFF0000) / 0xFFFF;
+                    int error = hr & 0xFFFF;
+                    const int FACILITY_HTTP = 25;
+                    const int NOT_FOUND = 404;
+
+                    if (facility == FACILITY_HTTP && error == NOT_FOUND)
+                    {
+                        return false; // File not found.
+                    }
+                    else if (facility != FACILITY_HTTP)
+                    {
+                        // We swallow HTTP errors, and re-throw any other exception.
+                        throw;
+                    }
+                }
+
+                QuestionsManager.AddQuestionsAndSave(website, feed, skipLastAllRead);
+
+                return true; // File found.
             });
         }
 

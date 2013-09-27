@@ -1,10 +1,14 @@
 ﻿using QuestionsBackgroundTasks;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -47,11 +51,39 @@ namespace Questions
             LoadingBar.ShowPaused = true;
         }
 
-        private void AddButton_Click(object sender, RoutedEventArgs e)
+        private async void AddButton_Click(object sender, RoutedEventArgs e)
         {
+            LoadingBar.ShowPaused = false;
+
             if (TagOptionsView.SelectedValue != null)
             {
-                website.AddTagAndSave(TagsView, TagOptionsView.SelectedValue as BindableTagOption);
+                var tagOption = TagOptionsView.SelectedValue as BindableTagOption;
+                string tag = tagOption.ToString();
+                await ValidateAndAddTagAsync(tag);
+            }
+            else if (!String.IsNullOrWhiteSpace(TagBox.Text))
+            {
+                await ValidateAndAddTagAsync(TagBox.Text);
+            }
+
+            LoadingBar.ShowPaused = true;
+        }
+
+        private async Task ValidateAndAddTagAsync(string tag)
+        {
+            String tagEncoded = WebUtility.UrlEncode(tag.Trim());
+
+            // Retrieve questions and skip the LastAllRead feature.
+            bool fileFound = await FeedManager.UpdateQuestionsSingleWebsite(website.ToString(), tagEncoded, true);
+
+            if (fileFound)
+            {
+                website.AddTagAndSave(TagsView, tag);
+            }
+            else
+            {
+                // Display red color while we figure it out a better way to diplay errors.
+                TagBox.Foreground = new SolidColorBrush(Colors.Red);
             }
         }
 
@@ -66,6 +98,19 @@ namespace Questions
         private void DoneButton_Click(object sender, RoutedEventArgs e)
         {
             Frame.Navigate(typeof(MainPage));
+        }
+
+        private void TagOptionsView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            TagBox.Text = "";
+        }
+
+        private void TagBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            // Bring back to black the color, in case we had an error before.
+            TagBox.Foreground = new SolidColorBrush(Colors.Black);
+
+            TagOptionsView.SelectedValue = null;
         }
     }
 }
