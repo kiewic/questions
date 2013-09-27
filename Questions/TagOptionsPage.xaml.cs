@@ -73,12 +73,15 @@ namespace Questions
         {
             String tagEncoded = WebUtility.UrlEncode(tag.Trim());
 
+            await QuestionsManager.LoadAsync();
+
             // Retrieve questions and skip the LastAllRead feature.
             bool fileFound = await FeedManager.UpdateQuestionsSingleWebsite(website.ToString(), tagEncoded, true);
 
             if (fileFound)
             {
                 website.AddTagAndSave(TagsView, tag);
+                FeedManager.UpdateTileAndBadge();
             }
             else
             {

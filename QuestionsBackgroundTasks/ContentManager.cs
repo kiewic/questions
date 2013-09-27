@@ -45,23 +45,44 @@ namespace QuestionsBackgroundTasks
                 // Convert settings from version 1 to version 2.
                 if (!rootObject.ContainsKey("Version"))
                 {
-                    rootObject.SetNamedValue("Version", JsonValue.CreateStringValue("2"));
-
-                    websitesCollection = new JsonObject();
-                    rootObject.SetNamedValue("Websites", websitesCollection);
-
-                    if (rootObject.ContainsKey("Tags"))
-                    {
-                        JsonObject websiteObject = new JsonObject();
-                        websiteObject.SetNamedValue("Tags", rootObject.GetNamedObject("Tags"));
-                        websitesCollection.SetNamedValue("http://stackoverflow.com", websiteObject);
-
-                        // TODO: Remove Tags object.
-                    }
+                    await MigrateFrom1To2();
                 }
 
                 websitesCollection = rootObject.GetNamedObject("Websites");
             });
+        }
+
+        private static IAsyncAction MigrateFrom1To2()
+        {
+            rootObject.SetNamedValue("Version", JsonValue.CreateStringValue("2"));
+
+            websitesCollection = new JsonObject();
+            rootObject.SetNamedValue("Websites", websitesCollection);
+
+            if (rootObject.ContainsKey("Tags"))
+            {
+                JsonObject websiteObject = new JsonObject();
+
+                // Make tags collection a child of Stack Overflow website.
+                websiteObject.SetNamedValue("Tags", rootObject.GetNamedObject("Tags"));
+                rootObject.Remove("Tags");
+
+                websiteObject.SetNamedValue("Name", JsonValue.CreateStringValue("Stack Overflow"));
+                websiteObject.SetNamedValue("ApiSiteParameter", JsonValue.CreateStringValue("stackoverflow"));
+                websiteObject.SetNamedValue("SiteUrl", JsonValue.CreateStringValue("http://stackoverflow.com"));
+                websiteObject.SetNamedValue("IconUrl", JsonValue.CreateStringValue("http://cdn.sstatic.net/stackoverflow/img/apple-touch-icon.png"));
+                websiteObject.SetNamedValue("FaviconUrl", JsonValue.CreateStringValue("http://cdn.sstatic.net/stackoverflow/img/favicon.ico"));
+
+                websitesCollection.SetNamedValue("http://stackoverflow.com", websiteObject);
+            }
+
+            if (rootObject.ContainsKey("Questions"))
+            {
+                // Remove questions, questions are now on a different file.
+                rootObject.Remove("Questions");
+            }
+
+            return SaveAsync();
         }
 
         public static IAsyncAction SaveAsync()

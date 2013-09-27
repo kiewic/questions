@@ -47,9 +47,7 @@ namespace QuestionsBackgroundTasks
                     await UpdateQuestionsSingleWebsite(website, query, false);
                 }
 
-                IList<BindableQuestion> list = QuestionsManager.GetSortedQuestions();
-                UpdateTileWithQuestions(list);
-                UpdateBadge(list.Count);
+                UpdateTileAndBadge();
             });
         }
 
@@ -95,6 +93,13 @@ namespace QuestionsBackgroundTasks
             });
         }
 
+        public static void UpdateTileAndBadge()
+        {
+            IList<BindableQuestion> list = QuestionsManager.GetSortedQuestions();
+            UpdateTileWithQuestions(list);
+            UpdateBadge(list.Count);
+        }
+
         public static void UpdateTileWithQuestions(IList<BindableQuestion> list)
         {
             if (list.Count > 2)
@@ -109,7 +114,7 @@ namespace QuestionsBackgroundTasks
                     message += " (" + DateTime.Now + ") (" + i + ")";
 #endif
 
-                    UpdateTile(message);
+                    CreateTileUpdate(message);
 
                     // Limit tile updates.
                     i++;
@@ -123,7 +128,7 @@ namespace QuestionsBackgroundTasks
 
         // For more about tile templates:
         // http://msdn.microsoft.com/en-us/library/windows/apps/Hh761491.aspx
-        public static void UpdateTile(string text)
+        public static void CreateTileUpdate(string text)
         {
             try
             {
