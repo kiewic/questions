@@ -190,5 +190,13 @@ namespace Questions
 
             RefreshButton_Click(null, null);
         }
+
+        private void Page_KeyUp(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == VirtualKey.F5)
+            {
+                RefreshButton_Click(null, null);
+            }
+        }
     }
 }
