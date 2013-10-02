@@ -8,6 +8,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.System;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -114,6 +115,15 @@ namespace Questions
             TagBox.Foreground = new SolidColorBrush(Colors.Black);
 
             TagOptionsView.SelectedValue = null;
+        }
+
+        private void TagBox_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == VirtualKey.Enter)
+            {
+                AddButton_Click(null, null);
+                e.Handled = true;
+            }
         }
     }
 }

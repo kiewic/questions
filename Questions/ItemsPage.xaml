@@ -6,7 +6,7 @@
     xmlns:common="using:Questions.Common"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d" KeyUp="Page_KeyUp">
+    mc:Ignorable="d">
 
     <Page.Resources>
         <DataTemplate x:Key="WideQuestion">
@@ -55,7 +55,7 @@
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
         <ProgressBar x:Name="LoadingBar" Style="{StaticResource SettingsProgress}"/>
-        <ListView Grid.Row="1" x:Name="QuestionsView" ItemClick="QuestionsView_ItemClick" IsItemClickEnabled="True" SelectionMode="None" Padding="30" ItemTemplate="{StaticResource WideQuestion}">
+        <ListView Grid.Row="1" x:Name="QuestionsView" ItemClick="QuestionsView_ItemClick" IsItemClickEnabled="True" SelectionMode="Single" Padding="30" ItemTemplate="{StaticResource WideQuestion}">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
                     <Setter Property="HorizontalContentAlignment" Value="Stretch" />

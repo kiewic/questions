@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Windows.ApplicationModel.Background;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.System;
@@ -27,6 +28,9 @@ namespace Questions
     /// </summary>
     public sealed partial class ItemsPage : LayoutAwarePage
     {
+        private KeyEventHandler keyUpHandler;
+        private TypedEventHandler<DataTransferManager, DataRequestedEventArgs> shareHandler;
+
         public ItemsPage()
         {
             this.InitializeComponent();
@@ -66,7 +70,20 @@ namespace Questions
 
             RegisterBackgroundTask();
 
+            RegisterShortcuts();
+
+            RegisterForShare();
+
             DisplayOrUpdateQuestions(false);
+        }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            base.OnNavigatedFrom(e);
+
+            UnregisterShortcuts();
+
+            UnregisterForShare();
         }
 
         private async void DisplayOrUpdateQuestions(bool forceUpdate)
@@ -143,6 +160,44 @@ namespace Questions
             }
         }
 
+        private void RegisterShortcuts()
+        {
+            // I don't know why, but assign the hanlder to the page does not work. But this does.
+            keyUpHandler = new KeyEventHandler(Page_KeyUp);
+            Window.Current.Content.AddHandler(UIElement.KeyUpEvent, keyUpHandler, false);
+        }
+
+        private void UnregisterShortcuts()
+        {
+            Window.Current.Content.RemoveHandler(UIElement.KeyUpEvent, keyUpHandler);
+        }
+
+        private void RegisterForShare()
+        {
+            DataTransferManager dataTransferManager = DataTransferManager.GetForCurrentView();
+            shareHandler = new TypedEventHandler<DataTransferManager, DataRequestedEventArgs>(ShareUriHandler);
+            dataTransferManager.DataRequested += shareHandler;
+        }
+
+        private void UnregisterForShare()
+        {
+            DataTransferManager dataTransferManager = DataTransferManager.GetForCurrentView();
+            dataTransferManager.DataRequested -= shareHandler;
+        }
+
+        private void ShareUriHandler(DataTransferManager sender, DataRequestedEventArgs args)
+        {
+            if (QuestionsView.SelectedItem != null)
+            {
+                BindableQuestion question = QuestionsView.SelectedItem as BindableQuestion;
+
+                DataRequest request = args.Request;
+                request.Data.Properties.Title = question.Title;
+                request.Data.Properties.Description = "Hey dude! I found this question using the Questions app and I think it may interest you.";
+                request.Data.SetUri(question.Link);
+            }
+        }
+
         private void TagsButton_Click(object sender, RoutedEventArgs e)
         {
             Frame.Navigate(typeof(MainPage));
@@ -196,6 +251,16 @@ namespace Questions
             if (e.Key == VirtualKey.F5)
             {
                 RefreshButton_Click(null, null);
+                e.Handled = true;
+            }
+            else if (e.Key == VirtualKey.C)
+            {
+                var ctrlState = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control);
+                if (ctrlState != CoreVirtualKeyStates.None)
+                {
+                    Frame.Navigate(typeof(EasterEggPage));
+                    e.Handled = true;
+                }
             }
         }
     }

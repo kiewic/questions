@@ -340,6 +340,7 @@
     <MainPackageIdentityName>1588kiewic.com.Questions</MainPackageIdentityName>
     <ReservedNames>
       <ReservedName>Questions·</ReservedName>
+      <ReservedName>Preguntas·</ReservedName>
     </ReservedNames>
   </ProductReservedInfo>
   <AccountPackageIdentityNames>
@@ -347,5 +348,10 @@
     <MainPackageIdentityName>1588kiewic.com.KiewicToolbox</MainPackageIdentityName>
     <MainPackageIdentityName>1588kiewic.com.3456142A5FDED</MainPackageIdentityName>
   </AccountPackageIdentityNames>
-  <PackageInfoList LandingUrl="https://appdev.microsoft.com:443/StorePortals/Developer/Catalog/ReleaseAnchor/ec6e62be-d597-4d61-a932-21f2936d2be3" />
+  <PackageInfoList LandingUrl="https://appdev.microsoft.com:443/StorePortals/Developer/Catalog/ReleaseAnchor/ec6e62be-d597-4d61-a932-21f2936d2be3">
+    <PackageInfo>
+      <PackageArchitecture>neutral</PackageArchitecture>
+      <PackageMaxArchitectureVersion>1.0.0.1</PackageMaxArchitectureVersion>
+    </PackageInfo>
+  </PackageInfoList>
 </StoreAssociation>

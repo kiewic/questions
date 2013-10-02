@@ -17,6 +17,13 @@ Keywords:
 
 Stack Overflow; StackOverflow; Stack Exchange; Questions; Reader; StackExchange; Answers
 
+Questions 1.0.0.2 new features:
+
+* Now share questions with other apps (share links).
+* Press F5 to refresh the questions list.
+* Press ENTER to add a tag from the TextBox.
+* Copy to get into the Easter egg, or paste to get out of it.
+
 Questions 1.0.0.1 new features:
 
 * Now get questions from any Stack Exchange network website, not only StackOverflow.com 
@@ -25,6 +32,8 @@ Questions 1.0.0.1 new features:
 * Tutorial for Questions app newbies. 
 * Adding badge updates.
 
-Questions 1.0.0.2 new features:
+## Stack Exchange API
 
-* Press F5 to refresh the questions.
+App listing at http://stackapps.com/questions/4348/questions-for-windows-8
+
+More about it at http://stackapps.com/apps/oauth

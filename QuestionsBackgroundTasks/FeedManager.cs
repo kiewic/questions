@@ -18,11 +18,7 @@ namespace QuestionsBackgroundTasks
 
         public static IAsyncAction UpdateQuestions()
         {
-            return AsyncInfo.Run(async (cancellationToken) =>
-            {
-                await ContentManager.LoadAsync();
-                await UpdateQuestions(false);
-            });
+            return UpdateQuestions(false);
         }
 
         // 1. Load settings.
@@ -102,7 +98,7 @@ namespace QuestionsBackgroundTasks
 
         public static void UpdateTileWithQuestions(IList<BindableQuestion> list)
         {
-            if (list.Count > 2)
+            if (list.Count > 0)
             {
                 int i = 0;
                 foreach (BindableQuestion question in list)

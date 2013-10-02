@@ -39,7 +39,7 @@
                         <TextBlock Style="{StaticResource SettingsBlock}" x:Name="WebsiteBlock" />
                         <TextBlock Style="{StaticResource SettingsBlock}">:</TextBlock>
                     </StackPanel>
-                    <TextBox Grid.Row="1" x:Name="TagBox" TextChanged="TagBox_TextChanged" />
+                    <TextBox Grid.Row="1" x:Name="TagBox" TextChanged="TagBox_TextChanged" KeyDown="TagBox_KeyDown" />
                     <TextBlock Grid.Row="2" Style="{StaticResource SettingsBlock}">Or choose a tag from the list:</TextBlock>
                     <Border Grid.Row="3" Style="{StaticResource SettingsBorder}">
                         <ListView x:Name="TagOptionsView" ItemTemplate="{StaticResource WideTag}" SelectionChanged="TagOptionsView_SelectionChanged">
