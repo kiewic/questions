@@ -9,11 +9,26 @@ namespace QuestionsBackgroundTasks
 {
     public sealed class BindableQuestion
     {
-        PowerpuffJsonObject json;
+        private PowerpuffJsonObject json;
+        private string id;
 
-        public BindableQuestion(JsonObject jsonObject)
+        public BindableQuestion(string id, JsonObject jsonObject)
         {
+            this.id = id;
             json = new PowerpuffJsonObject(jsonObject);
+        }
+
+        public JsonObject ToJsonObject()
+        {
+            return json.ToJsonObject();
+        }
+
+        public string Id
+        {
+            get
+            {
+                return id;
+            }
         }
 
         public string Website

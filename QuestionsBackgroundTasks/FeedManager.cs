@@ -43,6 +43,7 @@ namespace QuestionsBackgroundTasks
                     await UpdateQuestionsSingleWebsite(website, query, false);
                 }
 
+                QuestionsManager.LimitTo150AndSave();
                 UpdateTileAndBadge();
             });
         }
@@ -83,7 +84,7 @@ namespace QuestionsBackgroundTasks
                     }
                 }
 
-                QuestionsManager.AddQuestionsAndSave(website, feed, skipLastAllRead);
+                QuestionsManager.AddQuestions(website, feed, skipLastAllRead);
 
                 return true; // File found.
             });

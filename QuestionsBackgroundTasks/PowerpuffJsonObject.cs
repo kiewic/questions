@@ -40,5 +40,10 @@ namespace QuestionsBackgroundTasks
             JsonObject childObject = jsonObject.GetNamedObject(name);
             return String.Join(", ", childObject.Keys);
         }
+
+        public JsonObject ToJsonObject()
+        {
+            return jsonObject;
+        }
     }
 }

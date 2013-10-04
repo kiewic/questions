@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Data.Json;
 using Windows.Foundation;
+using Windows.UI.Popups;
 using Windows.UI.Xaml.Controls;
 using Windows.Web.Syndication;
 
@@ -106,17 +107,19 @@ namespace QuestionsBackgroundTasks
         {
             return AsyncInfo.Run(async (cancellationToken) =>
             {
+                const int websitesLimit = 10;
+
                 CheckSettingsAreLoaded();
 
                 string websiteSiteUrl = websiteOption.SiteUrl;
 
-                JsonObject websiteObject;
+                JsonObject websiteObject = null;
                 if (websitesCollection.ContainsKey(websiteSiteUrl))
                 {
                     // We already have this website. Nothing to do.
                     websiteObject = websitesCollection.GetNamedObject(websiteSiteUrl);
                 }
-                else
+                else if (websitesCollection.Count < websitesLimit)
                 {
                     websiteObject = new JsonObject();
                     websiteObject.SetNamedValue("Tags", new JsonObject());
@@ -126,9 +129,17 @@ namespace QuestionsBackgroundTasks
                     websiteObject.SetNamedValue("IconUrl", JsonValue.CreateStringValue(websiteOption.IconUrl));
                     websiteObject.SetNamedValue("FaviconUrl", JsonValue.CreateStringValue(websiteOption.FaviconUrl));
                     websitesCollection.SetNamedValue(websiteSiteUrl, websiteObject);
-                }
 
-                await SaveAsync();
+                    await SaveAsync();
+                }
+                else
+                {
+                    var dialog = new MessageDialog("Only 10 websites allowed.", "Oops.");
+                    await dialog.ShowAsync();
+
+                    // Make sure to return null.
+                    return null;
+                }
 
                 return new BindableWebsite(websiteObject);
             });

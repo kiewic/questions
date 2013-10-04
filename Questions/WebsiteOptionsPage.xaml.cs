@@ -47,7 +47,11 @@ namespace Questions
         {
             BindableWebsiteOption websiteOption = WebsiteOptionsView.SelectedItem as BindableWebsiteOption;
             BindableWebsite website = await ContentManager.AddWebsiteAndSave(websiteOption);
-            Frame.Navigate(typeof(TagOptionsPage), website);
+
+            if (website != null)
+            {
+                Frame.Navigate(typeof(TagOptionsPage), website);
+            }
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)

@@ -76,13 +76,17 @@ namespace Questions
 
             await QuestionsManager.LoadAsync();
 
-            // Retrieve questions and skip the LastAllRead feature.
+            // Retrieve questions, skip the LastAllRead feature and save questions.
             bool fileFound = await FeedManager.UpdateQuestionsSingleWebsite(website.ToString(), tagEncoded, true);
+            QuestionsManager.LimitTo150AndSave();
 
             if (fileFound)
             {
                 website.AddTagAndSave(TagsView, tag);
                 FeedManager.UpdateTileAndBadge();
+
+                // Tag added, clear the test.
+                TagBox.Text = "";
             }
             else
             {

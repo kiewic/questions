@@ -77,7 +77,7 @@ namespace QuestionsBackgroundTasks
             rootObject.Add("Questions", questionsCollection);
         }
 
-        public static async void AddQuestionsAndSave(string website, SyndicationFeed feed, bool skipLastAllRead)
+        public static void AddQuestions(string website, SyndicationFeed feed, bool skipLastAllRead)
         {
             CheckSettingsAreLoaded();
 
@@ -90,6 +90,31 @@ namespace QuestionsBackgroundTasks
                 {
                     AddQuestion(website, item);
                 }
+            }
+        }
+
+        public static async void LimitTo150AndSave()
+        {
+            const int questionsLimit = 150;
+            if (questionsCollection.Count > questionsLimit)
+            {
+                JsonObject questionsCollectionCopy = new JsonObject();
+                int length = questionsCollection.Count;
+                int i = 0;
+
+                IList<BindableQuestion> list = GetSortedQuestions();
+
+                foreach (BindableQuestion question in list)
+                {
+                    questionsCollectionCopy.Add(question.Id, question.ToJsonObject());
+                    if (++i == questionsLimit)
+                    {
+                        break;
+                    }
+                }
+
+                questionsCollection = questionsCollectionCopy;
+                rootObject.SetNamedValue("Questions", questionsCollectionCopy);
             }
 
             await SaveAsync();
@@ -146,11 +171,11 @@ namespace QuestionsBackgroundTasks
             CheckSettingsAreLoaded();
 
             List<BindableQuestion> list = new List<BindableQuestion>();
-            foreach (IJsonValue jsonValue in questionsCollection.Values)
+            foreach (var keyValuePair in questionsCollection)
             {
-                JsonObject jsonObject = jsonValue.GetObject();
-
-                BindableQuestion tempQuestion = new BindableQuestion(jsonObject);
+                BindableQuestion tempQuestion = new BindableQuestion(
+                    keyValuePair.Key,
+                    keyValuePair.Value.GetObject());
 
                 list.Add(tempQuestion);
             }
