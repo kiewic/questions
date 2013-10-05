@@ -61,7 +61,7 @@ namespace QuestionsBackgroundTasks
                 if (fileExists)
                 {
                     // Convert settings from version 2 to version 3.
-                    await MigrateFrom2To3();
+                    await MigrateFrom2To3Async();
                 }
 
                 LoadInternal();
@@ -80,7 +80,7 @@ namespace QuestionsBackgroundTasks
             }
         }
 
-        private static IAsyncAction MigrateFrom1To2()
+        private static void MigrateFrom1To2()
         {
             rootObject.SetNamedValue("Version", JsonValue.CreateStringValue("2"));
 
@@ -109,10 +109,10 @@ namespace QuestionsBackgroundTasks
                 rootObject.Remove("Questions");
             }
 
-            return SaveAsync();
+            Save();
         }
 
-        private static async Task MigrateFrom2To3()
+        private static async Task MigrateFrom2To3Async()
         {
             string jsonString = await FilesManager.LoadAsync(settingsFileName);
 
@@ -126,7 +126,7 @@ namespace QuestionsBackgroundTasks
             if (!rootObject.ContainsKey("Version"))
             {
                 // Convert settings from version 1 to version 2.
-                await MigrateFrom1To2();
+                MigrateFrom1To2();
             }
 
             // Version.
@@ -147,12 +147,9 @@ namespace QuestionsBackgroundTasks
         }
 
         // TODO: Make this method synchronous.
-        public static IAsyncAction SaveAsync()
+        public static void Save()
         {
-            return AsyncInfo.Run(async (cancellationToken) =>
-            {
-                roamingSettings.Values["Websites"] = websitesCollection.Stringify();
-            });
+            roamingSettings.Values["Websites"] = websitesCollection.Stringify();
         }
 
         private static void InitializeJsonValues()
@@ -190,7 +187,7 @@ namespace QuestionsBackgroundTasks
                     websiteObject.SetNamedValue("FaviconUrl", JsonValue.CreateStringValue(websiteOption.FaviconUrl));
                     websitesCollection.SetNamedValue(websiteSiteUrl, websiteObject);
 
-                    await SaveAsync();
+                    Save();
                 }
                 else
                 {
@@ -205,7 +202,7 @@ namespace QuestionsBackgroundTasks
             });
         }
 
-        public static async void DeleteWebsiteAndSave(BindableWebsite website)
+        public static void DeleteWebsiteAndSave(BindableWebsite website)
         {
             CheckSettingsAreLoaded();
 
@@ -214,7 +211,7 @@ namespace QuestionsBackgroundTasks
             // TODO: Remove only questions containing this website.
             QuestionsManager.ClearQuestions();
 
-            await SaveAsync();
+            Save();
         }
 
         internal static IEnumerable<string> GetWebsiteKeys()

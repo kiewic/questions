@@ -25,7 +25,7 @@ namespace QuestionsBackgroundTasks
             return id;
         }
 
-        public async void AddTagAndSave(ListView listView, string tag)
+        public void AddTagAndSave(ListView listView, string tag)
         {
             JsonObject tagsCollection = json.GetNamedObject("Tags");
 
@@ -40,10 +40,10 @@ namespace QuestionsBackgroundTasks
             tagsCollection.Add(tag, nullValue);
             listView.Items.Add(tag);
 
-            await ContentManager.SaveAsync();
+            ContentManager.Save();
         }
 
-        public async void DeleteTagAndSave(ListView listView, string tag)
+        public void DeleteTagAndSave(ListView listView, string tag)
         {
             JsonObject tagsCollection = json.GetNamedObject("Tags");
 
@@ -53,7 +53,7 @@ namespace QuestionsBackgroundTasks
             // TODO: Remove only questions containing this tag.
             QuestionsManager.ClearQuestions();
 
-            await ContentManager.SaveAsync();
+            ContentManager.Save();
         }
 
         public void DisplayTags(ListView listView)
