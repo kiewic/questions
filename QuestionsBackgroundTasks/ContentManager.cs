@@ -21,6 +21,25 @@ namespace QuestionsBackgroundTasks
         private static JsonObject websitesCollection;
         private static ApplicationDataContainer roamingSettings;
 
+        public static DateTimeOffset LastAllRead
+        {
+            get
+            {
+                CheckSettingsAreLoaded();
+
+                if (roamingSettings.Values.ContainsKey("LastAllRead"))
+                {
+                    return DateTimeOffset.Parse(roamingSettings.Values["LastAllRead"].ToString());
+                }
+
+                return DateTime.MinValue;
+            }
+            set
+            {
+                roamingSettings.Values["LastAllRead"] = value.ToString();
+            }
+        }
+
         public static IAsyncAction LoadAsync()
         {
 
@@ -247,7 +266,7 @@ namespace QuestionsBackgroundTasks
 
         private static void CheckSettingsAreLoaded()
         {
-            if (rootObject == null)
+            if (roamingSettings == null)
             {
                 throw new Exception("Settings not loaded.");
             }

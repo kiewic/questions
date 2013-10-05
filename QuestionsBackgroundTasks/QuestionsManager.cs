@@ -18,25 +18,6 @@ namespace QuestionsBackgroundTasks
         private static JsonObject rootObject;
         private static JsonObject questionsCollection;
 
-        public static DateTimeOffset LastAllRead
-        {
-            get
-            {
-                CheckSettingsAreLoaded();
-
-                if (rootObject.ContainsKey("LastAllRead"))
-                {
-                    return DateTimeOffset.Parse(rootObject.GetNamedString("LastAllRead"));
-                }
-
-                return DateTime.MinValue;
-            }
-            set
-            {
-                rootObject.SetNamedValue("LastAllRead", JsonValue.CreateStringValue(value.ToString()));
-            }
-        }
-
         public static IAsyncAction LoadAsync()
         {
             return AsyncInfo.Run(async (cancellationToken) =>
@@ -81,7 +62,7 @@ namespace QuestionsBackgroundTasks
         {
             CheckSettingsAreLoaded();
 
-            DateTimeOffset lastAllRead = LastAllRead;
+            DateTimeOffset lastAllRead = ContentManager.LastAllRead;
 
             foreach (SyndicationItem item in feed.Items)
             {
@@ -207,6 +188,7 @@ namespace QuestionsBackgroundTasks
             if (rootObject.ContainsKey("LastAllRead"))
             {
                 value = rootObject.GetNamedString("LastAllRead");
+                rootObject.Remove("LastAllRead");
                 await QuestionsManager.SaveAsync();
             }
 

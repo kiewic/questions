@@ -233,7 +233,7 @@ namespace Questions
 
             // The first question is the most recent.
             DateTimeOffset newLastAllRead = list[0].PubDate;
-            QuestionsManager.LastAllRead = newLastAllRead;
+            ContentManager.LastAllRead = newLastAllRead;
 
             // Clear questions in the frontend and in the bsckend.
             QuestionsManager.ClearQuestions();
