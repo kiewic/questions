@@ -77,6 +77,7 @@ namespace QuestionsBackgroundTasks
                     int hr = ex.HResult;
                     int facility = (hr & 0x7FFF0000) / 0xFFFF;
                     int error = hr & 0xFFFF;
+                    const int FACILITY_WIN32 = 7;
                     const int FACILITY_HTTP = 25;
                     const int NOT_FOUND = 404;
 
@@ -84,9 +85,18 @@ namespace QuestionsBackgroundTasks
                     {
                         return false; // File not found.
                     }
-                    else if (facility != FACILITY_HTTP)
+                    else if (facility == FACILITY_HTTP)
                     {
-                        // We swallow HTTP errors, and re-throw any other exception.
+                        // Swallow HTTP errors.
+                        return false; // Treat as file not found.
+                    }
+                    else if (facility == FACILITY_WIN32 && error > 12001 && error < 12156)
+                    {
+                        // Swallow WININET errors.
+                        return false; // Treat as file not found.
+                    }
+                    else
+                    {
                         throw;
                     }
                 }
