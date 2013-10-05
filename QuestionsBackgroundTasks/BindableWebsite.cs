@@ -11,16 +11,18 @@ namespace QuestionsBackgroundTasks
 {
     public sealed class BindableWebsite
     {
+        string id;
         PowerpuffJsonObject json;
 
-        public BindableWebsite(JsonObject jsonObject)
+        public BindableWebsite(string id, JsonObject jsonObject)
         {
+            this.id = id;
             json = new PowerpuffJsonObject(jsonObject);
         }
 
         public override string ToString()
         {
-            return json.GetNamedString("SiteUrl");
+            return id;
         }
 
         public async void AddTagAndSave(ListView listView, string tag)

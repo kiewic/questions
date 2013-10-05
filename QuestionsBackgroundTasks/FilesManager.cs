@@ -73,6 +73,20 @@ namespace QuestionsBackgroundTasks
             }
         }
 
+        public static async Task DeleteAsync(string fileName)
+        {
+            await LockAsync();
+            try
+            {
+                StorageFile storageFile = await GetOrCreateFileAsync(fileName);
+                await storageFile.DeleteAsync();
+            }
+            finally
+            {
+                Unlock();
+            }
+        }
+
         // TODO: Interesting. Is there a better way to add synchronization?
         private static Task<bool> LockAsync()
         {

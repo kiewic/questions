@@ -197,5 +197,20 @@ namespace QuestionsBackgroundTasks
                 throw new Exception("Questions not loaded.");
             }
         }
+
+        internal static async Task<string> MigrateLastAllRead()
+        {
+            string value = "";
+
+            await QuestionsManager.LoadAsync();
+
+            if (rootObject.ContainsKey("LastAllRead"))
+            {
+                value = rootObject.GetNamedString("LastAllRead");
+                await QuestionsManager.SaveAsync();
+            }
+
+            return value;
+        }
     }
 }

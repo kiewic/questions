@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Data.Json;
 using Windows.Foundation;
+using Windows.Storage;
 using Windows.UI.Popups;
 using Windows.UI.Xaml.Controls;
 using Windows.Web.Syndication;
@@ -18,38 +19,32 @@ namespace QuestionsBackgroundTasks
         private const string settingsFileName = "settings.json";
         private static JsonObject rootObject;
         private static JsonObject websitesCollection;
-
-        public ContentManager()
-        {
-            Debug.WriteLine("ContentManager constructor called.");
-        }
+        private static ApplicationDataContainer roamingSettings;
 
         public static IAsyncAction LoadAsync()
         {
+
             return AsyncInfo.Run(async (cancellationToken) =>
             {
-                if (rootObject != null)
+                if (roamingSettings != null)
                 {
-                    // Settings already loaded, there is nothing to do.
+                    // Settings already loaded, there is nothing to load.
                     return;
                 }
 
-                string jsonString = await FilesManager.LoadAsync(settingsFileName);
+                roamingSettings = ApplicationData.Current.RoamingSettings;
+                Debug.WriteLine("Roaming storage quota: {0} KB", ApplicationData.Current.RoamingStorageQuota);
+                Debug.WriteLine("Roaming folder: {0}", ApplicationData.Current.RoamingFolder.Path);
 
-                if (!JsonObject.TryParse(jsonString, out rootObject))
+                string version = roamingSettings.Values["Version"] as string;
+
+                if (version == null)
                 {
-                    Debug.WriteLine("Invalid JSON object: {0}", jsonString);
-                    InitializeJsonValues();
-                    return;
+                    // Convert settings from version 2 to version 3.
+                    await MigrateFrom2To3();
                 }
 
-                // Convert settings from version 1 to version 2.
-                if (!rootObject.ContainsKey("Version"))
-                {
-                    await MigrateFrom1To2();
-                }
-
-                websitesCollection = rootObject.GetNamedObject("Websites");
+                websitesCollection = JsonObject.Parse(roamingSettings.Values["Websites"].ToString());
             });
         }
 
@@ -70,7 +65,6 @@ namespace QuestionsBackgroundTasks
 
                 websiteObject.SetNamedValue("Name", JsonValue.CreateStringValue("Stack Overflow"));
                 websiteObject.SetNamedValue("ApiSiteParameter", JsonValue.CreateStringValue("stackoverflow"));
-                websiteObject.SetNamedValue("SiteUrl", JsonValue.CreateStringValue("http://stackoverflow.com"));
                 websiteObject.SetNamedValue("IconUrl", JsonValue.CreateStringValue("http://cdn.sstatic.net/stackoverflow/img/apple-touch-icon.png"));
                 websiteObject.SetNamedValue("FaviconUrl", JsonValue.CreateStringValue("http://cdn.sstatic.net/stackoverflow/img/favicon.ico"));
 
@@ -86,11 +80,46 @@ namespace QuestionsBackgroundTasks
             return SaveAsync();
         }
 
+        private static async Task MigrateFrom2To3()
+        {
+            string jsonString = await FilesManager.LoadAsync(settingsFileName);
+
+            if (!JsonObject.TryParse(jsonString, out rootObject))
+            {
+                Debug.WriteLine("Invalid JSON object: {0}", jsonString);
+                InitializeJsonValues();
+                return;
+            }
+
+            if (!rootObject.ContainsKey("Version"))
+            {
+                // Convert settings from version 1 to version 2.
+                await MigrateFrom1To2();
+            }
+
+            // Version.
+            roamingSettings.Values["Version"] = "3";
+
+            // Websites.
+            websitesCollection = rootObject.GetNamedObject("Websites");
+            roamingSettings.Values["Websites"] = websitesCollection.Stringify();
+
+            // LastAllRead should be also synched across devices.
+            string lastAllRead = await QuestionsManager.MigrateLastAllRead();
+            if (!String.IsNullOrEmpty(lastAllRead))
+            {
+                roamingSettings.Values["LastAllRead"] = lastAllRead;
+            }
+
+            await FilesManager.DeleteAsync(settingsFileName);
+        }
+
+        // TODO: Make this method synchronous.
         public static IAsyncAction SaveAsync()
         {
             return AsyncInfo.Run(async (cancellationToken) =>
             {
-                await FilesManager.SaveAsync(settingsFileName, rootObject.Stringify());
+                roamingSettings.Values["Websites"] = websitesCollection.Stringify();
             });
         }
 
@@ -125,7 +154,6 @@ namespace QuestionsBackgroundTasks
                     websiteObject.SetNamedValue("Tags", new JsonObject());
                     websiteObject.SetNamedValue("Name", JsonValue.CreateStringValue(websiteOption.ToString()));
                     websiteObject.SetNamedValue("ApiSiteParameter", JsonValue.CreateStringValue(websiteOption.ApiSiteParameter));
-                    websiteObject.SetNamedValue("SiteUrl", JsonValue.CreateStringValue(websiteOption.SiteUrl));
                     websiteObject.SetNamedValue("IconUrl", JsonValue.CreateStringValue(websiteOption.IconUrl));
                     websiteObject.SetNamedValue("FaviconUrl", JsonValue.CreateStringValue(websiteOption.FaviconUrl));
                     websitesCollection.SetNamedValue(websiteSiteUrl, websiteObject);
@@ -141,7 +169,7 @@ namespace QuestionsBackgroundTasks
                     return null;
                 }
 
-                return new BindableWebsite(websiteObject);
+                return new BindableWebsite(websiteSiteUrl, websiteObject);
             });
         }
 
@@ -167,9 +195,9 @@ namespace QuestionsBackgroundTasks
             await LoadAsync();
 
             listView.Items.Clear();
-            foreach (IJsonValue jsonValue in websitesCollection.Values)
+            foreach (var keyValuePair in websitesCollection)
             {
-                var website = new BindableWebsite(jsonValue.GetObject());
+                var website = new BindableWebsite(keyValuePair.Key, keyValuePair.Value.GetObject());
                 listView.Items.Add(website);
             }
         }
