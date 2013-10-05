@@ -73,6 +73,27 @@ namespace QuestionsBackgroundTasks
             }
         }
 
+        public static async Task<bool> FileExistsAsync(string fileName)
+        {
+            await LockAsync();
+            try
+            {
+                try
+                {
+                    StorageFile storageFile = await ApplicationData.Current.LocalFolder.GetFileAsync(fileName);
+                    return true;
+                }
+                catch (FileNotFoundException)
+                {
+                    return false;
+                }
+            }
+            finally
+            {
+                Unlock();
+            }
+        }
+
         public static async Task DeleteAsync(string fileName)
         {
             await LockAsync();

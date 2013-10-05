@@ -42,6 +42,12 @@ namespace QuestionsBackgroundTasks
                     string query = ContentManager.ConcatenateAllTags(website);
                     tasks.Add(UpdateQuestionsSingleWebsite(website, query, false).AsTask());
                 }
+
+                if (tasks.Count == 0)
+                {
+                    // There is nothing to wait.
+                    return;
+                }
                 await Task.Factory.ContinueWhenAll(tasks.ToArray(), (tasks2) => {});
 
                 QuestionsManager.LimitTo150AndSave();

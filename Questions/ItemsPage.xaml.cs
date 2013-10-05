@@ -9,8 +9,10 @@ using Windows.ApplicationModel.Background;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
 using Windows.System;
 using Windows.UI.Core;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -28,8 +30,11 @@ namespace Questions
     /// </summary>
     public sealed partial class ItemsPage : LayoutAwarePage
     {
+        private const string taskName = "QuestionsTimerTask";
         private KeyEventHandler keyUpHandler;
         private TypedEventHandler<DataTransferManager, DataRequestedEventArgs> shareHandler;
+        private BackgroundTaskCompletedEventHandler taskCompletedHandler;
+        private TypedEventHandler<ApplicationData, object> dataChangedHandler;
 
         public ItemsPage()
         {
@@ -69,10 +74,9 @@ namespace Questions
             base.OnNavigatedTo(e);
 
             RegisterBackgroundTask();
-
             RegisterShortcuts();
-
             RegisterForShare();
+            RegisterDataChanged();
 
             DisplayOrUpdateQuestions(false);
         }
@@ -81,9 +85,10 @@ namespace Questions
         {
             base.OnNavigatedFrom(e);
 
-            UnregisterShortcuts();
-
+            UnregisterDataChanged();
             UnregisterForShare();
+            UnregisterShortcuts();
+            UnregisterBackgroundTask();
         }
 
         private async void DisplayOrUpdateQuestions(bool forceUpdate)
@@ -117,8 +122,7 @@ namespace Questions
 
         private async void RegisterBackgroundTask()
         {
-            const string name = "QuestionsTimerTask";
-            UnregisterBackgroundTask(name);
+            UnregisterBackgroundTask();
 
             try
             {
@@ -132,31 +136,62 @@ namespace Questions
 
             // A background task can be registered even if lock screen access was denied.
             BackgroundTaskBuilder builder = new BackgroundTaskBuilder();
-            builder.Name = name;
+            builder.Name = taskName;
             builder.TaskEntryPoint = "QuestionsBackgroundTasks.TimerTask";
             builder.SetTrigger(new TimeTrigger(15, false));
             BackgroundTaskRegistration task = builder.Register();
 
-            task.Completed += (sender, args) =>
-            {
-                Debug.WriteLine(args.InstanceId + " completed on " + DateTime.Now);
-#pragma warning disable 4014
-                // Do not force Update, this method is called just from the backgroun task that updated everything.
-                Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => DisplayOrUpdateQuestions(false));
-#pragma warning restore 4014
-            };
+            taskCompletedHandler = new BackgroundTaskCompletedEventHandler(TaskCompletedHandler);
+            task.Completed += TaskCompletedHandler;
         }
 
-        private void UnregisterBackgroundTask(string name)
+        private void UnregisterBackgroundTask()
         {
             // Loop through all background tasks and unregister any that matches the givn name.
             foreach (var keyValuePair in BackgroundTaskRegistration.AllTasks)
             {
                 IBackgroundTaskRegistration task = keyValuePair.Value;
-                if (task.Name == name)
+                if (task.Name == taskName)
                 {
+                    task.Completed -= taskCompletedHandler;
                     task.Unregister(true);
                 }
+            }
+        }
+
+        private void TaskCompletedHandler(BackgroundTaskRegistration sender, BackgroundTaskCompletedEventArgs args)
+        {
+            Debug.WriteLine(args.InstanceId + " completed on " + DateTime.Now);
+#pragma warning disable 4014
+            // Do not force an Update. This handler is called from the background task that just made an updated.
+            Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => DisplayOrUpdateQuestions(false));
+#pragma warning restore 4014
+        }
+
+        private void RegisterDataChanged()
+        {
+            dataChangedHandler = new TypedEventHandler<ApplicationData, object>(DataChangedHandler);
+            ApplicationData.Current.DataChanged += dataChangedHandler;
+        }
+
+        private void UnregisterDataChanged()
+        {
+            ApplicationData.Current.DataChanged -= dataChangedHandler;
+        }
+
+        private async void DataChangedHandler(ApplicationData sender, object args)
+        {
+            try
+            {
+                var dialog = new MessageDialog("We received new settings!", sender + " " + args);
+                await dialog.ShowAsync();
+                await ContentManager.LoadAsync();
+                // Do an Update. This handler is called when settings in another device change.
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => DisplayOrUpdateQuestions(true));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
             }
         }
 
@@ -175,7 +210,7 @@ namespace Questions
         private void RegisterForShare()
         {
             DataTransferManager dataTransferManager = DataTransferManager.GetForCurrentView();
-            shareHandler = new TypedEventHandler<DataTransferManager, DataRequestedEventArgs>(ShareUriHandler);
+            shareHandler = new TypedEventHandler<DataTransferManager, DataRequestedEventArgs>(ShareHandler);
             dataTransferManager.DataRequested += shareHandler;
         }
 
@@ -185,7 +220,7 @@ namespace Questions
             dataTransferManager.DataRequested -= shareHandler;
         }
 
-        private void ShareUriHandler(DataTransferManager sender, DataRequestedEventArgs args)
+        private void ShareHandler(DataTransferManager sender, DataRequestedEventArgs args)
         {
             if (QuestionsView.SelectedItem != null)
             {

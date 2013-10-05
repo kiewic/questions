@@ -42,7 +42,6 @@ namespace QuestionsBackgroundTasks
 
         public static IAsyncAction LoadAsync()
         {
-
             return AsyncInfo.Run(async (cancellationToken) =>
             {
                 if (roamingSettings != null)
@@ -52,19 +51,33 @@ namespace QuestionsBackgroundTasks
                 }
 
                 roamingSettings = ApplicationData.Current.RoamingSettings;
+
                 Debug.WriteLine("Roaming storage quota: {0} KB", ApplicationData.Current.RoamingStorageQuota);
                 Debug.WriteLine("Roaming folder: {0}", ApplicationData.Current.RoamingFolder.Path);
 
                 string version = roamingSettings.Values["Version"] as string;
 
-                if (version == null)
+                bool fileExists = await FilesManager.FileExistsAsync(settingsFileName);
+                if (fileExists)
                 {
                     // Convert settings from version 2 to version 3.
                     await MigrateFrom2To3();
                 }
 
-                websitesCollection = JsonObject.Parse(roamingSettings.Values["Websites"].ToString());
+                LoadInternal();
             });
+        }
+
+        private static void LoadInternal()
+        {
+            if (roamingSettings.Values.ContainsKey("Websites"))
+            {
+                string jsonString = roamingSettings.Values["Websites"].ToString();
+                websitesCollection = JsonObject.Parse(jsonString);
+            }
+            else {
+                websitesCollection = new JsonObject();
+            }
         }
 
         private static IAsyncAction MigrateFrom1To2()
