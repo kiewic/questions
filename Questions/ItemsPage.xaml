@@ -17,15 +17,28 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" Margin="0">
                     <TextBlock FontSize="28" Text="{Binding Title}" />
-                    <TextBlock FontSize="12" Foreground="DarkGray" Text="{Binding Website}" />
+                    <StackPanel Grid.Column="1" Margin="0" Orientation="Horizontal">
+                        <Image Width="10" Height="10" Source="{Binding FaviconUrl}" Margin="0,0,5,0" />
+                        <TextBlock FontSize="12" Foreground="DarkGray" Text="{Binding Website}" />
+                    </StackPanel>
                 </StackPanel>
                 <TextBlock Grid.Column="1" FontSize="28" FontWeight="Bold" Foreground="DarkGray" Text="{Binding PubDateDiff}" />
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="NarrowQuestion">
             <StackPanel Grid.Column="0" Margin="0">
-                <TextBlock FontSize="28" Text="{Binding Title}" TextWrapping="Wrap" />
-                <TextBlock FontSize="12" Foreground="DarkGray" Text="{Binding Website}" />
+                <TextBlock FontSize="24" Text="{Binding Title}" TextWrapping="Wrap" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Image Grid.Column="0" Width="16" Height="16" Source="{Binding FaviconUrl}" Margin="0,0,10,0" />
+                    <StackPanel Grid.Column="1">
+                        <TextBlock FontSize="12" Foreground="DarkGray" Text="{Binding Website}" />
+                        <TextBlock FontSize="12" Foreground="DarkGray"  Text="{Binding PubDateDiff}" />
+                    </StackPanel>
+                </Grid>
             </StackPanel>
         </DataTemplate>
         <Style x:Key="StatusBlock" TargetType="TextBlock">
@@ -76,6 +89,9 @@
                         <ColorAnimation To="#DEDEDE" Storyboard.TargetName="QuestionsGrid" Storyboard.TargetProperty="(Grid.Background).(SolidColorBrush.Color)" />
                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="QuestionsView" Storyboard.TargetProperty="ItemTemplate">
                             <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource NarrowQuestion}" />
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="QuestionsView" Storyboard.TargetProperty="SelectionMode">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="None" />
                         </ObjectAnimationUsingKeyFrames>
                     </Storyboard>
                 </VisualState>

@@ -222,6 +222,20 @@ namespace QuestionsBackgroundTasks
             return websitesCollection.Keys;
         }
 
+        internal static string GetWebsiteFaviconUrl(string website)
+        {
+            if (websitesCollection.ContainsKey(website))
+            {
+                JsonObject websiteObject = websitesCollection.GetNamedObject(website);
+                if (websiteObject.ContainsKey("FaviconUrl"))
+                {
+                    return websiteObject.GetNamedString("FaviconUrl");
+                }
+            }
+
+            return "";
+        }
+
         public static async void LoadAndDisplayWebsites(ListView listView)
         {
             await LoadAsync();

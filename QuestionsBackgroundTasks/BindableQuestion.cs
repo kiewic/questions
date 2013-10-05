@@ -84,5 +84,14 @@ namespace QuestionsBackgroundTasks
                 return (int)diff.TotalDays + " days ago";
             }
         }
+
+        public string FaviconUrl
+        {
+            get
+            {
+                string website = Website;
+                return ContentManager.GetWebsiteFaviconUrl(website);
+            }
+        }
     }
 }
