@@ -35,13 +35,14 @@ namespace QuestionsBackgroundTasks
                 await ContentManager.LoadAsync();
                 await QuestionsManager.LoadAsync();
 
-                // TODO: query websites in parallel.
+                // Query websites in parallel.
+                List<Task> tasks = new List<Task>();
                 foreach (string website in ContentManager.GetWebsiteKeys())
                 {
                     string query = ContentManager.ConcatenateAllTags(website);
-
-                    await UpdateQuestionsSingleWebsite(website, query, false);
+                    tasks.Add(UpdateQuestionsSingleWebsite(website, query, false).AsTask());
                 }
+                await Task.Factory.ContinueWhenAll(tasks.ToArray(), (tasks2) => {});
 
                 QuestionsManager.LimitTo150AndSave();
                 UpdateTileAndBadge();

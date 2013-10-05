@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Data.Json;
 using Windows.Foundation;
@@ -14,6 +15,7 @@ namespace QuestionsBackgroundTasks
 {
     public sealed class QuestionsManager
     {
+        private static AutoResetEvent addEvent = new AutoResetEvent(true);
         private const string settingsFileName = "questions.json";
         private static JsonObject rootObject;
         private static JsonObject questionsCollection;
@@ -58,24 +60,38 @@ namespace QuestionsBackgroundTasks
             rootObject.Add("Questions", questionsCollection);
         }
 
+        // This method can be call simultaneously. Make sure only one thread is touching it.
         public static void AddQuestions(string website, SyndicationFeed feed, bool skipLastAllRead)
         {
-            CheckSettingsAreLoaded();
+            // Wait until the event is set by another thread.
+            addEvent.WaitOne();
 
-            DateTimeOffset lastAllRead = ContentManager.LastAllRead;
-
-            foreach (SyndicationItem item in feed.Items)
+            try
             {
-                Debug.WriteLine("PublishedDate: {0}", item.PublishedDate);
-                if (skipLastAllRead || DateTimeOffset.Compare(item.PublishedDate.DateTime, lastAllRead) > 0)
+                CheckSettingsAreLoaded();
+
+                DateTimeOffset lastAllRead = ContentManager.LastAllRead;
+
+                foreach (SyndicationItem item in feed.Items)
                 {
-                    AddQuestion(website, item);
+                    if (skipLastAllRead || DateTimeOffset.Compare(item.PublishedDate.DateTime, lastAllRead) > 0)
+                    {
+                        Debug.WriteLine("Adding: {0}", item.Id);
+                        AddQuestion(website, item);
+                    }
                 }
+            }
+            finally
+            {
+                // Set the event, so other threads waiting on it can do their job.
+                addEvent.Set();
             }
         }
 
         public static async void LimitTo150AndSave()
         {
+            Debug.WriteLine("Questions count before limit: {0}", questionsCollection.Count);
+
             const int questionsLimit = 150;
             if (questionsCollection.Count > questionsLimit)
             {
@@ -97,6 +113,8 @@ namespace QuestionsBackgroundTasks
                 questionsCollection = questionsCollectionCopy;
                 rootObject.SetNamedValue("Questions", questionsCollectionCopy);
             }
+
+            Debug.WriteLine("Questions count after limit: {0}", questionsCollection.Count);
 
             await SaveAsync();
         }
@@ -127,9 +145,9 @@ namespace QuestionsBackgroundTasks
             JsonObject categoriesCollection = new JsonObject();
             foreach (SyndicationCategory category in item.Categories)
             {
-                Debug.WriteLine("Category: {0}", category.Term);
                 categoriesCollection.Add(category.Term, nullValue);
             }
+            Debug.WriteLine("Categories: {0}", categoriesCollection.Stringify());
             questionObject.Add("Categories", categoriesCollection);
 
             questionsCollection.Add(item.Id, questionObject);
