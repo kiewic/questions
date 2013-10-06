@@ -22,6 +22,12 @@ Stack Overflow; StackOverflow; Stack Exchange; Questions; Reader; StackExchange;
 
 ### Notes
 
+Questions 1.0.3.0 features:
+
+* Adding favicons.
+* Limiting websites to 10 and questions to 150.
+* Enabling roaming application data.
+
 Questions 1.0.0.2 new features:
 
 * Now share questions with other apps (share links).
@@ -42,3 +48,5 @@ Questions 1.0.0.1 new features:
 App listing at http://stackapps.com/questions/4348/questions-for-windows-8
 
 More about it at http://stackapps.com/apps/oauth
+
+![Footer](http://kiewic.com/Content/Questions/Images/Footer.png)

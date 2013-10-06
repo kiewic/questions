@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest">
-  <Identity Name="1588kiewic.com.Questions" Publisher="CN=5D147FB8-C538-4B90-8304-556DC65AA46B" Version="1.0.0.4" />
+  <Identity Name="1588kiewic.com.Questions" Publisher="CN=5D147FB8-C538-4B90-8304-556DC65AA46B" Version="1.0.3.0" />
   <Properties>
     <DisplayName>Questions·</DisplayName>
     <PublisherDisplayName>kiewic.com</PublisherDisplayName>
