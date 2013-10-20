@@ -22,6 +22,10 @@ Stack Overflow; StackOverflow; Stack Exchange; Questions; Reader; StackExchange;
 
 ### Notes
 
+Questions 1.0.4.0 features:
+
+* Fixing tutorial typo.
+
 Questions 1.0.3.0 features:
 
 * Adding favicons.
@@ -42,6 +46,10 @@ Questions 1.0.0.1 new features:
 * Snapped view improvements. 
 * Tutorial for Questions app newbies. 
 * Adding badge updates.
+
+### Download
+
+Download from http://apps.microsoft.com/windows/en-us/app/questions/ec6e62be-d597-4d61-a932-21f2936d2be3
 
 ### Stack Exchange API
 
