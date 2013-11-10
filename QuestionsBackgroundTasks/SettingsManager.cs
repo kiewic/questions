@@ -16,7 +16,7 @@ using Windows.Web.Syndication;
 
 namespace QuestionsBackgroundTasks
 {
-    public sealed class ContentManager
+    public sealed class SettingsManager
     {
         private const string settingsFileName = "settings.json";
         private static JsonObject rootObject;

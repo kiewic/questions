@@ -40,7 +40,7 @@ namespace QuestionsBackgroundTasks
             tagsCollection.Add(tag, nullValue);
             listView.Items.Add(tag);
 
-            ContentManager.Save();
+            SettingsManager.Save();
         }
 
         public void DeleteTagAndSave(ListView listView, string tag)
@@ -53,7 +53,7 @@ namespace QuestionsBackgroundTasks
             // TODO: Remove only questions containing this tag.
             QuestionsManager.ClearQuestions();
 
-            ContentManager.Save();
+            SettingsManager.Save();
         }
 
         public void DisplayTags(ListView listView)

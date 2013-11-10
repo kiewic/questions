@@ -70,7 +70,7 @@ namespace Questions
                 // configuring the new page by passing required information as a navigation
                 // parameter
 
-                bool isNewApp = await ContentManager.IsEmptyAsync();
+                bool isNewApp = await SettingsManager.IsEmptyAsync();
                 Type initialPage = typeof(ItemsPage);
                 if (isNewApp)
                 {
@@ -122,7 +122,7 @@ namespace Questions
             StorageFile file = await openPicker.PickSingleFileAsync();
             if (file != null)
             {
-                ContentManager.Import(file);
+                SettingsManager.Import(file);
             }
         }
 
@@ -142,7 +142,7 @@ namespace Questions
             StorageFile file = await savePicker.PickSaveFileAsync();
             if (file != null)
             {
-                ContentManager.Export(file);
+                SettingsManager.Export(file);
             }
         }
 

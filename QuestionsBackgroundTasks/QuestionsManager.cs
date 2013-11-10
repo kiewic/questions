@@ -70,7 +70,7 @@ namespace QuestionsBackgroundTasks
             {
                 CheckSettingsAreLoaded();
 
-                DateTimeOffset lastAllRead = ContentManager.LastAllRead;
+                DateTimeOffset lastAllRead = SettingsManager.LastAllRead;
 
                 foreach (SyndicationItem item in feed.Items)
                 {

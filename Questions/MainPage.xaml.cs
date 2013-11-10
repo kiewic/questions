@@ -42,7 +42,7 @@ namespace Questions
         /// property is typically used to configure the page.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            ContentManager.LoadAndDisplayWebsites(WebsitesView);
+            SettingsManager.LoadAndDisplayWebsites(WebsitesView);
         }
 
         private void WebsitesView_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -79,8 +79,8 @@ namespace Questions
             {
                 throw new Exception("No website selected.");
             }
-            ContentManager.DeleteWebsiteAndSave(WebsitesView.SelectedItem as BindableWebsite);
-            ContentManager.LoadAndDisplayWebsites(WebsitesView);
+            SettingsManager.DeleteWebsiteAndSave(WebsitesView.SelectedItem as BindableWebsite);
+            SettingsManager.LoadAndDisplayWebsites(WebsitesView);
         }
 
         private void DoneButton_Click(object sender, RoutedEventArgs e)

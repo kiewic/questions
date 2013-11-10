@@ -90,7 +90,7 @@ namespace QuestionsBackgroundTasks
             get
             {
                 string website = Website;
-                return ContentManager.GetWebsiteFaviconUrl(website);
+                return SettingsManager.GetWebsiteFaviconUrl(website);
             }
         }
     }

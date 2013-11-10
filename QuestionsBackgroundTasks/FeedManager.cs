@@ -32,14 +32,14 @@ namespace QuestionsBackgroundTasks
         {
             return AsyncInfo.Run(async (cancellationToken) =>
             {
-                await ContentManager.LoadAsync();
+                await SettingsManager.LoadAsync();
                 await QuestionsManager.LoadAsync();
 
                 // Query websites in parallel.
                 List<Task> tasks = new List<Task>();
-                foreach (string website in ContentManager.GetWebsiteKeys())
+                foreach (string website in SettingsManager.GetWebsiteKeys())
                 {
-                    string query = ContentManager.ConcatenateAllTags(website);
+                    string query = SettingsManager.ConcatenateAllTags(website);
                     tasks.Add(UpdateQuestionsSingleWebsite(website, query, false).AsTask());
                 }
 
@@ -60,7 +60,7 @@ namespace QuestionsBackgroundTasks
             return AsyncInfo.Run(async (cancellationToken) =>
             {
                 Uri uri;
-                if (!ContentManager.TryCreateUri(website, query, out uri))
+                if (!SettingsManager.TryCreateUri(website, query, out uri))
                 {
                     Debugger.Break();
                 }

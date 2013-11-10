@@ -185,7 +185,7 @@ namespace Questions
             {
                 var dialog = new MessageDialog("We received new settings!", sender + " " + args);
                 await dialog.ShowAsync();
-                await ContentManager.LoadAsync();
+                await SettingsManager.LoadAsync();
                 // Do an Update. This handler is called when settings in another device change.
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => DisplayOrUpdateQuestions(true));
             }
@@ -268,7 +268,7 @@ namespace Questions
 
             // The first question is the most recent.
             DateTimeOffset newLastAllRead = list[0].PubDate;
-            ContentManager.LastAllRead = newLastAllRead;
+            SettingsManager.LastAllRead = newLastAllRead;
 
             // Clear questions in the frontend and in the bsckend.
             QuestionsManager.ClearQuestions();

@@ -46,7 +46,7 @@ namespace Questions
         private async void AddButton_Click(object sender, RoutedEventArgs e)
         {
             BindableWebsiteOption websiteOption = WebsiteOptionsView.SelectedItem as BindableWebsiteOption;
-            BindableWebsite website = await ContentManager.AddWebsiteAndSave(websiteOption);
+            BindableWebsite website = await SettingsManager.AddWebsiteAndSave(websiteOption);
 
             if (website != null)
             {
