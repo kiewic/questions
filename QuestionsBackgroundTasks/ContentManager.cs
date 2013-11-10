@@ -7,7 +7,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Data.Json;
 using Windows.Foundation;
+using Windows.Foundation.Collections;
 using Windows.Storage;
+using Windows.Storage.Streams;
 using Windows.UI.Popups;
 using Windows.UI.Xaml.Controls;
 using Windows.Web.Syndication;
@@ -55,8 +57,6 @@ namespace QuestionsBackgroundTasks
                 Debug.WriteLine("Roaming storage quota: {0} KB", ApplicationData.Current.RoamingStorageQuota);
                 Debug.WriteLine("Roaming folder: {0}", ApplicationData.Current.RoamingFolder.Path);
 
-                string version = roamingSettings.Values["Version"] as string;
-
                 bool fileExists = await FilesManager.FileExistsAsync(settingsFileName);
                 if (fileExists)
                 {
@@ -64,18 +64,21 @@ namespace QuestionsBackgroundTasks
                     await MigrateFrom2To3Async();
                 }
 
-                LoadInternal();
+                InitializeVars();
             });
         }
 
-        private static void LoadInternal()
+        private static void InitializeVars()
         {
+            string version = roamingSettings.Values["Version"] as string;
+
             if (roamingSettings.Values.ContainsKey("Websites"))
             {
                 string jsonString = roamingSettings.Values["Websites"].ToString();
                 websitesCollection = JsonObject.Parse(jsonString);
             }
-            else {
+            else
+            {
                 websitesCollection = new JsonObject();
             }
         }
@@ -294,6 +297,86 @@ namespace QuestionsBackgroundTasks
             {
                 throw new Exception("Settings not loaded.");
             }
+        }
+
+        public static async void Export(StorageFile file)
+        {
+            CheckSettingsAreLoaded();
+
+            JsonObject jsonObject = new JsonObject();
+
+            foreach (KeyValuePair<string, object> pair in roamingSettings.Values)
+            {
+                IJsonValue jsonValue;
+                if (pair.Value == null)
+                {
+                    jsonValue = JsonValue.Parse("null");
+                }
+                else if (pair.Value is string)
+                {
+                    jsonValue = JsonValue.CreateStringValue((string)pair.Value);
+                }
+                else if (pair.Value is int)
+                {
+                    jsonValue = JsonValue.CreateNumberValue((int)pair.Value);
+                }
+                else if (pair.Value is double)
+                {
+                    jsonValue = JsonValue.CreateNumberValue((double)pair.Value);
+                }
+                else if (pair.Value is bool)
+                {
+                    jsonValue = JsonValue.CreateBooleanValue((bool)pair.Value);
+                }
+                else
+                {
+                    throw new Exception("Not supported type.");
+                }
+
+                jsonObject.Add(pair.Key, jsonValue);
+            }
+
+            await FileIO.WriteTextAsync(file, jsonObject.Stringify());
+        }
+
+        public static async void Import(StorageFile file)
+        {
+            string jsonString = await FileIO.ReadTextAsync(file);
+
+            JsonObject jsonObject;
+            if (!JsonObject.TryParse(jsonString, out jsonObject))
+            {
+                // TODO: Notify user there was an error.
+                throw new Exception("Invalid JSON string.");
+            }
+
+            roamingSettings.Values.Clear();
+
+            foreach (string key in jsonObject.Keys)
+            {
+                IJsonValue jsonValue = jsonObject[key];
+
+                switch (jsonValue.ValueType)
+                {
+                    case JsonValueType.String:
+                        roamingSettings.Values.Add(key, jsonObject[key].GetString());
+                        break;
+                    case JsonValueType.Number:
+                        roamingSettings.Values.Add(key, jsonObject[key].GetNumber());
+                        break;
+                    case JsonValueType.Boolean:
+                        roamingSettings.Values.Add(key, jsonObject[key].GetBoolean());
+                        break;
+                    case JsonValueType.Null:
+                        roamingSettings.Values.Add(key, null);
+                        break;
+                    default:
+                        throw new Exception("Not supported JsonValueType.");
+                }
+            }
+
+            // Update static vars.
+            InitializeVars();
         }
     }
 }

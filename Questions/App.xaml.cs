@@ -7,6 +7,8 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
+using Windows.Storage.Pickers;
 using Windows.UI.ApplicationSettings;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
@@ -91,8 +93,12 @@ namespace Questions
         {
             SettingsCommand tutorialCommand = new SettingsCommand("Tutorial", "See Tutorial", SeeTurorial);
             SettingsCommand privacyPolicyCommand = new SettingsCommand("PrivacyPolicy", "Privacy Policy", LaunchPrivacyPolicyUrl);
+            SettingsCommand importSettingsCommand = new SettingsCommand("ImportSettings", "Import Settings", ImportSettings);
+            SettingsCommand exportSettingsCommand = new SettingsCommand("ExportSettings", "Export Settings", ExportSettings);
             args.Request.ApplicationCommands.Add(tutorialCommand);
             args.Request.ApplicationCommands.Add(privacyPolicyCommand);
+            args.Request.ApplicationCommands.Add(importSettingsCommand);
+            args.Request.ApplicationCommands.Add(exportSettingsCommand);
         }
 
         private void SeeTurorial(IUICommand command)
@@ -105,6 +111,39 @@ namespace Questions
         {
             Uri privacyPolicyUri = new Uri("http://kiewic.com/privacypolicy");
             var result = await Windows.System.Launcher.LaunchUriAsync(privacyPolicyUri);
+        }
+
+        private async void ImportSettings(IUICommand command)
+        {
+            FileOpenPicker openPicker = new FileOpenPicker();
+            openPicker.ViewMode = PickerViewMode.Thumbnail;
+            openPicker.SuggestedStartLocation = PickerLocationId.Downloads;
+            openPicker.FileTypeFilter.Add(".json");
+            StorageFile file = await openPicker.PickSingleFileAsync();
+            if (file != null)
+            {
+                ContentManager.Import(file);
+            }
+        }
+
+        private async void ExportSettings(IUICommand command)
+        {
+            FileSavePicker savePicker = new FileSavePicker();
+            savePicker.SuggestedStartLocation = PickerLocationId.Downloads;
+            DateTime now = DateTime.Now;
+            savePicker.SuggestedFileName = String.Format(
+                "questions_{0:D4}_{1:D2}_{2:D2}_at_{3:D2}_{4:D2}.json",
+                now.Year,
+                now.Month,
+                now.Day,
+                now.Hour,
+                now.Minute);
+            savePicker.FileTypeChoices.Add("JSON", new string[] { ".json" });
+            StorageFile file = await savePicker.PickSaveFileAsync();
+            if (file != null)
+            {
+                ContentManager.Export(file);
+            }
         }
 
         /// <summary>
