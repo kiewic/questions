@@ -18,7 +18,6 @@ namespace QuestionsBackgroundTasks
 {
     public sealed class SettingsManager
     {
-        private const string settingsFileName = "settings.json";
         private static JsonObject rootObject;
         private static JsonObject websitesCollection;
         private static ApplicationDataContainer roamingSettings;
@@ -42,6 +41,14 @@ namespace QuestionsBackgroundTasks
             }
         }
 
+        public static string Version
+        {
+            get
+            {
+                return roamingSettings.Values["Version"].ToString();
+            }
+        }
+
         public static IAsyncAction LoadAsync()
         {
             return AsyncInfo.Run(async (cancellationToken) =>
@@ -57,111 +64,38 @@ namespace QuestionsBackgroundTasks
                 Debug.WriteLine("Roaming storage quota: {0} KB", ApplicationData.Current.RoamingStorageQuota);
                 Debug.WriteLine("Roaming folder: {0}", ApplicationData.Current.RoamingFolder.Path);
 
-                bool fileExists = await FilesManager.FileExistsAsync(settingsFileName);
-                if (fileExists)
-                {
-                    // Convert settings from version 2 to version 3.
-                    await MigrateFrom2To3Async();
-                }
-
-                InitializeVars();
+                InitializeRoamingSettings();
             });
         }
 
-        private static void InitializeVars()
+        private static void InitializeRoamingSettings()
         {
-            string version = roamingSettings.Values["Version"] as string;
-
-            if (roamingSettings.Values.ContainsKey("Websites"))
+            if (!roamingSettings.Values.ContainsKey("Version"))
             {
-                string jsonString = roamingSettings.Values["Websites"].ToString();
-                websitesCollection = JsonObject.Parse(jsonString);
-            }
-            else
-            {
-                websitesCollection = new JsonObject();
-            }
-        }
-
-        private static void MigrateFrom1To2()
-        {
-            rootObject.SetNamedValue("Version", JsonValue.CreateStringValue("2"));
-
-            websitesCollection = new JsonObject();
-            rootObject.SetNamedValue("Websites", websitesCollection);
-
-            if (rootObject.ContainsKey("Tags"))
-            {
-                JsonObject websiteObject = new JsonObject();
-
-                // Make tags collection a child of Stack Overflow website.
-                websiteObject.SetNamedValue("Tags", rootObject.GetNamedObject("Tags"));
-                rootObject.Remove("Tags");
-
-                websiteObject.SetNamedValue("Name", JsonValue.CreateStringValue("Stack Overflow"));
-                websiteObject.SetNamedValue("ApiSiteParameter", JsonValue.CreateStringValue("stackoverflow"));
-                websiteObject.SetNamedValue("IconUrl", JsonValue.CreateStringValue("http://cdn.sstatic.net/stackoverflow/img/apple-touch-icon.png"));
-                websiteObject.SetNamedValue("FaviconUrl", JsonValue.CreateStringValue("http://cdn.sstatic.net/stackoverflow/img/favicon.ico"));
-
-                websitesCollection.SetNamedValue("http://stackoverflow.com", websiteObject);
+                roamingSettings.Values["Version"] = "3";
             }
 
-            if (rootObject.ContainsKey("Questions"))
+            if (!roamingSettings.Values.ContainsKey("UserId"))
             {
-                // Remove questions, questions are now on a different file.
-                rootObject.Remove("Questions");
+                // Generate a random user id.
+                roamingSettings.Values["UserId"] = Guid.NewGuid().ToString();
             }
 
-            Save();
-        }
-
-        private static async Task MigrateFrom2To3Async()
-        {
-            string jsonString = await FilesManager.LoadAsync(settingsFileName);
-
-            if (!JsonObject.TryParse(jsonString, out rootObject))
+            if (!roamingSettings.Values.ContainsKey("Websites"))
             {
-                Debug.WriteLine("Invalid JSON object: {0}", jsonString);
-                InitializeJsonValues();
-                return;
+                JsonObject jsonObject = new JsonObject();
+                roamingSettings.Values["Websites"] = jsonObject.Stringify();
             }
 
-            if (!rootObject.ContainsKey("Version"))
-            {
-                // Convert settings from version 1 to version 2.
-                MigrateFrom1To2();
-            }
-
-            // Version.
-            roamingSettings.Values["Version"] = "3";
-
-            // Websites.
-            websitesCollection = rootObject.GetNamedObject("Websites");
-            roamingSettings.Values["Websites"] = websitesCollection.Stringify();
-
-            // LastAllRead should be also synched across devices.
-            string lastAllRead = await QuestionsManager.MigrateLastAllRead();
-            if (!String.IsNullOrEmpty(lastAllRead))
-            {
-                roamingSettings.Values["LastAllRead"] = lastAllRead;
-            }
-
-            await FilesManager.DeleteAsync(settingsFileName);
+            // Parse websites.
+            string jsonString = roamingSettings.Values["Websites"].ToString();
+            websitesCollection = JsonObject.Parse(jsonString);
         }
 
         // TODO: Make this method synchronous.
         public static void Save()
         {
             roamingSettings.Values["Websites"] = websitesCollection.Stringify();
-        }
-
-        private static void InitializeJsonValues()
-        {
-            rootObject = new JsonObject();
-            rootObject.Add("Version", JsonValue.CreateStringValue("2"));
-
-            websitesCollection = new JsonObject();
-            rootObject.Add("Websites", websitesCollection);
         }
 
         public static IAsyncOperation<BindableWebsite> AddWebsiteAndSave(BindableWebsiteOption websiteOption)
@@ -375,8 +309,9 @@ namespace QuestionsBackgroundTasks
                 }
             }
 
-            // Update static vars.
-            InitializeVars();
+            // Any value may be missing from the settings file, make sure all
+            // values are initialized and websites are parsed.
+            InitializeRoamingSettings();
         }
     }
 }
