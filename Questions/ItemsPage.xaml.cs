@@ -162,10 +162,16 @@ namespace Questions
         private void TaskCompletedHandler(BackgroundTaskRegistration sender, BackgroundTaskCompletedEventArgs args)
         {
             Debug.WriteLine(args.InstanceId + " completed on " + DateTime.Now);
-#pragma warning disable 4014
-            // Do not force an Update. This handler is called from the background task that just made an updated.
-            Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => DisplayOrUpdateQuestions(false));
-#pragma warning restore 4014
+            #pragma warning disable 4014
+            Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                // Unload is required, so the qeustions get uploaded from the file. It seems thattThe background trask and the app process
+                // do not share the same QuestionManager static vars.
+                QuestionsManager.Unload();
+
+                // Do not force an Update. This handler is called from the background task that just made an updated.
+                DisplayOrUpdateQuestions(false);
+            });
+            #pragma warning restore 4014
         }
 
         private void RegisterDataChanged()

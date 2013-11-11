@@ -35,12 +35,17 @@ namespace QuestionsBackgroundTasks
                 if (!JsonObject.TryParse(jsonString, out rootObject))
                 {
                     Debug.WriteLine("Invalid JSON object: {0}", jsonString);
-                    InitializeJsonValues();
+                    CreateFromScratch();
                     return;
                 }
 
                 questionsCollection = rootObject.GetNamedObject("Questions");
             });
+        }
+
+        public static void Unload()
+        {
+            rootObject = null;
         }
 
         public static IAsyncAction SaveAsync()
@@ -51,10 +56,9 @@ namespace QuestionsBackgroundTasks
             });
         }
 
-        private static void InitializeJsonValues()
+        private static void CreateFromScratch()
         {
             rootObject = new JsonObject();
-            rootObject.Add("Version", JsonValue.CreateStringValue("2"));
 
             questionsCollection = new JsonObject();
             rootObject.Add("Questions", questionsCollection);
