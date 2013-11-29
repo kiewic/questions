@@ -68,6 +68,7 @@ namespace QuestionsBackgroundTasks
                 SyndicationFeed feed = null;
                 try
                 {
+                    client.BypassCacheOnRetrieve = true;
                     feed = await client.RetrieveFeedAsync(uri);
                 }
                 catch (Exception ex)

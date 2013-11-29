@@ -116,7 +116,7 @@ namespace Questions
         private async void ImportSettings(IUICommand command)
         {
             FileOpenPicker openPicker = new FileOpenPicker();
-            openPicker.ViewMode = PickerViewMode.Thumbnail;
+            openPicker.ViewMode = PickerViewMode.List;
             openPicker.SuggestedStartLocation = PickerLocationId.Downloads;
             openPicker.FileTypeFilter.Add(".json");
             StorageFile file = await openPicker.PickSingleFileAsync();

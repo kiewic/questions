@@ -35,6 +35,7 @@ namespace Questions
         private TypedEventHandler<DataTransferManager, DataRequestedEventArgs> shareHandler;
         private BackgroundTaskCompletedEventHandler taskCompletedHandler;
         private TypedEventHandler<ApplicationData, object> dataChangedHandler;
+        private IAsyncOperation<IUICommand> showOperation;
 
         public ItemsPage()
         {
@@ -93,6 +94,8 @@ namespace Questions
 
         private async void DisplayOrUpdateQuestions(bool forceUpdate)
         {
+            StatusBlock.Visibility = Visibility.Collapsed;
+
             await QuestionsManager.LoadAsync();
 
             IList<BindableQuestion> list = null;
@@ -104,7 +107,6 @@ namespace Questions
             if (list == null || list.Count == 0)
             {
                 // Deleting sites or tags cleans the questions collection. Query again.
-                StatusBlock.Visibility = Visibility.Collapsed;
                 LoadingBar.ShowPaused = false;
                 await FeedManager.UpdateQuestions();
                 LoadingBar.ShowPaused = true;
@@ -161,10 +163,21 @@ namespace Questions
 
         private void TaskCompletedHandler(BackgroundTaskRegistration sender, BackgroundTaskCompletedEventArgs args)
         {
-            Debug.WriteLine(args.InstanceId + " completed on " + DateTime.Now);
+            string message = args.InstanceId + " completed on " + DateTime.Now;
+            Debug.WriteLine(message);
+
             #pragma warning disable 4014
             Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                // Unload is required, so the qeustions get uploaded from the file. It seems thattThe background trask and the app process
+                #if DEBUG
+                var dialog = new MessageDialog(message, "Task Completed");
+                if (showOperation != null)
+                {
+                    showOperation.Cancel();
+                }
+                showOperation = dialog.ShowAsync();
+                #endif
+
+                // Unload is required, so the qeustions get uploaded from the file. It seems that the background trask and the app process
                 // do not share the same QuestionManager static vars.
                 QuestionsManager.Unload();
 
