@@ -9,10 +9,14 @@
     mc:Ignorable="d">
 
     <Page.Resources>
+        <Style x:Key="InlineButton" TargetType="Button">
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+        </Style>
         <DataTemplate x:Key="WideQuestion">
             <Grid x:Name="Foo" HorizontalAlignment="Stretch" Margin="0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="auto" />
                     <ColumnDefinition Width="auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" Margin="0">
@@ -22,7 +26,12 @@
                         <TextBlock FontSize="12" Foreground="DarkGray" Text="{Binding Website}" />
                     </StackPanel>
                 </StackPanel>
-                <TextBlock Grid.Column="1" FontSize="28" FontWeight="Bold" Foreground="DarkGray" Text="{Binding PubDateDiff}" />
+                <StackPanel x:Name="ItemButtons" Orientation="Horizontal" HorizontalAlignment="Stretch" Grid.Column="1" Visibility="Collapsed">
+                    <Button Style="{StaticResource InlineButton}">Open</Button>
+                    <Button Style="{StaticResource InlineButton}">Dismiss</Button>
+                    <Button Style="{StaticResource InlineButton}">Share</Button>
+                </StackPanel>
+                <TextBlock Grid.Column="2" FontSize="28" FontWeight="Bold" Foreground="DarkGray" Text="{Binding PubDateDiff}" />
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="NarrowQuestion">
@@ -41,6 +50,9 @@
                 </Grid>
             </StackPanel>
         </DataTemplate>
+        <Style x:Key="CustomizedListViewItemContainer" TargetType="ListViewItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
         <Style x:Key="StatusBlock" TargetType="TextBlock">
             <Setter Property="Visibility" Value="Collapsed" />
             <Setter Property="FontSize" Value="40" />
@@ -68,12 +80,16 @@
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
         <ProgressBar x:Name="LoadingBar" Style="{StaticResource SettingsProgress}"/>
-        <ListView Grid.Row="1" x:Name="QuestionsView" ItemClick="QuestionsView_ItemClick" IsItemClickEnabled="True" SelectionMode="Single" Padding="30" ItemTemplate="{StaticResource WideQuestion}">
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem">
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                </Style>
-            </ListView.ItemContainerStyle>
+        <ListView
+            Grid.Row="1"
+            x:Name="QuestionsView"
+            ItemClick="QuestionsView_ItemClick"
+            IsItemClickEnabled="True"
+            SelectionMode="Single"
+            Padding="30"
+            ItemTemplate="{StaticResource WideQuestion}"
+            ItemContainerStyle="{StaticResource CustomizedListViewItemContainer}"
+            IsSwipeEnabled="True">
         </ListView>
         <TextBlock Grid.Row="1" x:Name="StatusBlock" Style="{StaticResource StatusBlock}">There are no more questions :(</TextBlock>
         <Button Grid.Row="2" HorizontalAlignment="Center" FontSize="30" Click="AllReadButton_Click">Mark All As Read</Button>
