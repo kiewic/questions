@@ -44,7 +44,7 @@ namespace Questions
         /// search results, and so forth.
         /// </summary>
         /// <param name="args">Details about the launch request and process.</param>
-        protected override async void OnLaunched(LaunchActivatedEventArgs args)
+        protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
             Frame rootFrame = Window.Current.Content as Frame;
 
@@ -70,7 +70,7 @@ namespace Questions
                 // configuring the new page by passing required information as a navigation
                 // parameter
 
-                bool isNewApp = await SettingsManager.IsEmptyAsync();
+                bool isNewApp = SettingsManager.IsEmpty();
                 Type initialPage = typeof(ItemsPage);
                 if (isNewApp)
                 {

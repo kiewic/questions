@@ -92,14 +92,14 @@ namespace Questions
             UnregisterBackgroundTask();
         }
 
-        private async void DisplayOrUpdateQuestions(bool forceUpdate)
+        private async void DisplayOrUpdateQuestions(bool forceQuery)
         {
             StatusBlock.Visibility = Visibility.Collapsed;
 
             await QuestionsManager.LoadAsync();
 
             IList<BindableQuestion> list = null;
-            if (!forceUpdate)
+            if (!forceQuery)
             {
                 list = QuestionsManager.GetSortedQuestions();
             }
@@ -108,7 +108,7 @@ namespace Questions
             {
                 // Deleting sites or tags cleans the questions collection. Query again.
                 LoadingBar.ShowPaused = false;
-                await FeedManager.UpdateQuestions();
+                await FeedManager.QueryWebsitesAsync();
                 LoadingBar.ShowPaused = true;
 
                 list = QuestionsManager.GetSortedQuestions();
@@ -163,7 +163,7 @@ namespace Questions
 
         private void TaskCompletedHandler(BackgroundTaskRegistration sender, BackgroundTaskCompletedEventArgs args)
         {
-            string message = args.InstanceId + " completed on " + DateTime.Now;
+            string message = sender.Name + " completed on " + DateTime.Now;
             Debug.WriteLine(message);
 
             #pragma warning disable 4014
@@ -204,7 +204,7 @@ namespace Questions
             {
                 var dialog = new MessageDialog("We received new settings!", sender + " " + args);
                 await dialog.ShowAsync();
-                await SettingsManager.LoadAsync();
+                SettingsManager.Load();
                 // Do an Update. This handler is called when settings in another device change.
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => DisplayOrUpdateQuestions(true));
             }

@@ -103,6 +103,7 @@
     <Compile Include="PowerpuffJsonObject.cs" />
     <Compile Include="BindableTagOption.cs" />
     <Compile Include="BindableWebsiteOption.cs" />
+    <Compile Include="QuerySingleWebsiteResult.cs" />
     <Compile Include="SettingsManager.cs" />
     <Compile Include="FeedManager.cs" />
     <Compile Include="FilesManager.cs" />

@@ -77,10 +77,10 @@ namespace Questions
             await QuestionsManager.LoadAsync();
 
             // Retrieve questions, skip the LastAllRead feature and save questions.
-            bool fileFound = await FeedManager.UpdateQuestionsSingleWebsite(website.ToString(), tagEncoded, true);
+            QuerySingleWebsiteResult result = await FeedManager.QuerySingleWebsiteAsync(website.ToString(), tagEncoded, true);
             QuestionsManager.LimitTo150AndSave();
 
-            if (fileFound)
+            if (result.FileFound)
             {
                 website.AddTagAndSave(TagsView, tag);
                 FeedManager.UpdateTileAndBadge();
@@ -92,6 +92,11 @@ namespace Questions
             {
                 // Display red color while we figure it out a better way to diplay errors.
                 TagBox.Foreground = new SolidColorBrush(Colors.Red);
+            }
+
+            if (result.Changed)
+            {
+                SettingsManager.Changed = true;
             }
         }
 

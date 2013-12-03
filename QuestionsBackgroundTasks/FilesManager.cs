@@ -49,7 +49,7 @@ namespace QuestionsBackgroundTasks
                 StorageFile storageFile = await GetOrCreateFileAsync(fileName);
 
                 string content = await FileIO.ReadTextAsync(storageFile);
-                Debug.WriteLine("Text length: {0}", content.Length);
+                Debug.WriteLine("Length of read text: {0}", content.Length);
                 return content;
             }
             finally
@@ -64,7 +64,7 @@ namespace QuestionsBackgroundTasks
             try
             {
                 StorageFile storageFile = await GetOrCreateFileAsync(fileName);
-                Debug.WriteLine("Text length: {0}", content.Length);
+                Debug.WriteLine("Length of written text: {0}", content.Length);
                 await FileIO.WriteTextAsync(storageFile, content);
             }
             finally

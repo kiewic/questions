@@ -65,8 +65,10 @@ namespace QuestionsBackgroundTasks
         }
 
         // This method can be call simultaneously. Make sure only one thread is touching it.
-        public static void AddQuestions(string website, SyndicationFeed feed, bool skipLastAllRead)
+        public static bool AddQuestions(string website, SyndicationFeed feed, bool skipLastAllRead)
         {
+            bool questionsChanged = false;
+
             // Wait until the event is set by another thread.
             addEvent.WaitOne();
 
@@ -80,10 +82,14 @@ namespace QuestionsBackgroundTasks
                 {
                     if (skipLastAllRead || DateTimeOffset.Compare(item.PublishedDate.DateTime, lastAllRead) > 0)
                     {
-                        Debug.WriteLine("Adding: {0}", item.Id);
-                        AddQuestion(website, item);
+                        if (AddQuestion(website, item))
+                        {
+                            questionsChanged = true;
+                        }
                     }
                 }
+
+                return questionsChanged;
             }
             finally
             {
@@ -124,12 +130,11 @@ namespace QuestionsBackgroundTasks
         }
 
         // NOTE: Adding a single question does not load or save settings. Good for performance.
-        private static void AddQuestion(string website, SyndicationItem item)
+        private static bool AddQuestion(string website, SyndicationItem item)
         {
             if (questionsCollection.ContainsKey(item.Id))
             {
-                Debug.WriteLine("Question already exists.");
-                return;
+                return UpdateQuestion(website, item);
             }
 
             JsonObject questionObject = new JsonObject();
@@ -155,6 +160,25 @@ namespace QuestionsBackgroundTasks
             questionObject.Add("Categories", categoriesCollection);
 
             questionsCollection.Add(item.Id, questionObject);
+
+            Debug.WriteLine("New question: {0}", item.Id);
+            return true;
+        }
+
+        private static bool UpdateQuestion(string website, SyndicationItem item)
+        {
+            JsonObject questionObject = questionsCollection.GetNamedObject(item.Id);
+
+            string oldTitle = questionObject.GetNamedString("Title");
+            string newTitle = item.Title.Text;
+            if (oldTitle != newTitle)
+            {
+                questionObject.SetNamedValue("Title", JsonValue.CreateStringValue(newTitle));
+                Debug.WriteLine("Question updated: {0}", item.Id);
+                return true;
+            }
+
+            return false;
         }
 
         public static void ClearQuestions()
@@ -165,7 +189,11 @@ namespace QuestionsBackgroundTasks
 
         public static void DisplayQuestions(ListView listView, IList<BindableQuestion> list)
         {
-            listView.ItemsSource = list;
+            if (listView.ItemsSource == null || SettingsManager.Changed)
+            {
+                listView.ItemsSource = list;
+                SettingsManager.Changed = false;
+            }
         }
 
         // TODO: I fthis is an expensive operation, maybe we should consider to cache the result.

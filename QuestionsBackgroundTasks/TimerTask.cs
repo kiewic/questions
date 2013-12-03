@@ -18,12 +18,12 @@ namespace QuestionsBackgroundTasks
             BackgroundTaskDeferral deferral = taskInstance.GetDeferral();
 
 #if DEBUG
-            InvokeSimpleToast("Hello!");
+            InvokeSimpleToast("Hello from " + taskInstance.Task.Name);
 #endif
 
             try
             {
-                await FeedManager.UpdateQuestions();
+                await FeedManager.QueryWebsitesAsync();
             }
             catch (Exception ex)
             {

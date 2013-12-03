@@ -18,9 +18,9 @@ namespace QuestionsBackgroundTasks
 {
     public sealed class SettingsManager
     {
-        private static JsonObject rootObject;
         private static JsonObject websitesCollection;
-        private static ApplicationDataContainer roamingSettings;
+        private static IPropertySet roamingValues;
+        private static IPropertySet localValues;
 
         public static DateTimeOffset LastAllRead
         {
@@ -28,16 +28,16 @@ namespace QuestionsBackgroundTasks
             {
                 CheckSettingsAreLoaded();
 
-                if (roamingSettings.Values.ContainsKey("LastAllRead"))
+                if (roamingValues.ContainsKey("LastAllRead"))
                 {
-                    return DateTimeOffset.Parse(roamingSettings.Values["LastAllRead"].ToString());
+                    return DateTimeOffset.Parse(roamingValues["LastAllRead"].ToString());
                 }
 
                 return DateTime.MinValue;
             }
             set
             {
-                roamingSettings.Values["LastAllRead"] = value.ToString();
+                roamingValues["LastAllRead"] = value.ToString();
             }
         }
 
@@ -45,57 +45,78 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return roamingSettings.Values["Version"].ToString();
+                return roamingValues["Version"].ToString();
             }
         }
 
-        public static IAsyncAction LoadAsync()
+        public static bool Changed
         {
-            return AsyncInfo.Run(async (cancellationToken) =>
+            get
             {
-                if (roamingSettings != null)
+                CheckSettingsAreLoaded();
+
+                if (localValues.ContainsKey("Changed"))
                 {
-                    // Settings already loaded, there is nothing to load.
-                    return;
+                    return (bool)localValues["Changed"];
                 }
 
-                roamingSettings = ApplicationData.Current.RoamingSettings;
+                // If we do not know if someting has changed, lets assume it has.
+                return true;
+            }
+            set
+            {
+                localValues["Changed"] = value;
+            }
+        }
 
-                Debug.WriteLine("Roaming storage quota: {0} KB", ApplicationData.Current.RoamingStorageQuota);
-                Debug.WriteLine("Roaming folder: {0}", ApplicationData.Current.RoamingFolder.Path);
+        public static void Load()
+        {
+            if (roamingValues != null)
+            {
+                // Settings already loaded, there is nothing to load.
+                return;
+            }
 
-                InitializeRoamingSettings();
-            });
+            ApplicationDataContainer roamingSettings = ApplicationData.Current.RoamingSettings;
+            ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+
+            roamingValues = roamingSettings.Values;
+            localValues = localSettings.Values;
+
+            Debug.WriteLine("Roaming settings storage quota: {0} KB", ApplicationData.Current.RoamingStorageQuota);
+            Debug.WriteLine("Roaming settings folder: {0}", ApplicationData.Current.RoamingFolder.Path);
+            Debug.WriteLine("Local settings folder: {0}", ApplicationData.Current.LocalFolder.Path);
+
+            InitializeRoamingSettings();
         }
 
         private static void InitializeRoamingSettings()
         {
-            if (!roamingSettings.Values.ContainsKey("Version"))
+            if (!roamingValues.ContainsKey("Version"))
             {
-                roamingSettings.Values["Version"] = "3";
+                roamingValues["Version"] = "3";
             }
 
-            if (!roamingSettings.Values.ContainsKey("UserId"))
+            if (!roamingValues.ContainsKey("UserId"))
             {
                 // Generate a random user id.
-                roamingSettings.Values["UserId"] = Guid.NewGuid().ToString();
+                roamingValues["UserId"] = Guid.NewGuid().ToString();
             }
 
-            if (!roamingSettings.Values.ContainsKey("Websites"))
+            if (!roamingValues.ContainsKey("Websites"))
             {
                 JsonObject jsonObject = new JsonObject();
-                roamingSettings.Values["Websites"] = jsonObject.Stringify();
+                roamingValues["Websites"] = jsonObject.Stringify();
             }
 
             // Parse websites.
-            string jsonString = roamingSettings.Values["Websites"].ToString();
+            string jsonString = roamingValues["Websites"].ToString();
             websitesCollection = JsonObject.Parse(jsonString);
         }
 
-        // TODO: Make this method synchronous.
         public static void Save()
         {
-            roamingSettings.Values["Websites"] = websitesCollection.Stringify();
+            roamingValues["Websites"] = websitesCollection.Stringify();
         }
 
         public static IAsyncOperation<BindableWebsite> AddWebsiteAndSave(BindableWebsiteOption websiteOption)
@@ -170,9 +191,9 @@ namespace QuestionsBackgroundTasks
             return "";
         }
 
-        public static async void LoadAndDisplayWebsites(ListView listView)
+        public static void LoadAndDisplayWebsites(ListView listView)
         {
-            await LoadAsync();
+            Load();
 
             listView.Items.Clear();
             foreach (var keyValuePair in websitesCollection)
@@ -215,21 +236,18 @@ namespace QuestionsBackgroundTasks
             return Uri.TryCreate(uriString, UriKind.Absolute, out uri);
         }
 
-        public static IAsyncOperation<bool> IsEmptyAsync()
+        public static bool IsEmpty()
         {
-            return AsyncInfo.Run(async (cancellationToken) =>
-            {
-                await LoadAsync();
+            Load();
 
-                return (websitesCollection.Count == 0) ? true : false;
-            });
+            return (websitesCollection.Count == 0) ? true : false;
         }
 
         private static void CheckSettingsAreLoaded()
         {
-            if (roamingSettings == null)
+            if (roamingValues == null || localValues == null)
             {
-                throw new Exception("Settings not loaded.");
+                throw new Exception("Settings are not loaded.");
             }
         }
 
@@ -238,8 +256,52 @@ namespace QuestionsBackgroundTasks
             CheckSettingsAreLoaded();
 
             JsonObject jsonObject = new JsonObject();
+            jsonObject.Add("RoamingValues", Export(roamingValues));
+            jsonObject.Add("LocalValues", Export(localValues));
 
-            foreach (KeyValuePair<string, object> pair in roamingSettings.Values)
+            string jsonString = jsonObject.Stringify();
+            await FileIO.WriteTextAsync(file, jsonString);
+        }
+
+        public static async void Import(StorageFile file)
+        {
+            CheckSettingsAreLoaded();
+
+            string jsonString = await FileIO.ReadTextAsync(file);
+
+            JsonObject jsonObject;
+            if (!JsonObject.TryParse(jsonString, out jsonObject))
+            {
+                // Invalid JSON string.
+                // TODO: Notify user there was an error importing settings.
+                Debugger.Break();
+                return;
+            }
+
+            if (jsonObject.ContainsKey("RoamingValues"))
+            {
+                IJsonValue jsonValue = jsonObject.GetNamedValue("RoamingValues");
+                if (jsonValue.ValueType == JsonValueType.Object)
+                {
+                    Import(roamingValues, jsonValue.GetObject());
+                }
+            }
+
+            if (jsonObject.ContainsKey("LocalValues"))
+            {
+                IJsonValue jsonValue = jsonObject.GetNamedValue("LocalValues");
+                if (jsonValue.ValueType == JsonValueType.Object)
+                {
+                    Import(localValues, jsonValue.GetObject());
+                }
+            }
+        }
+
+        private static JsonObject Export(IPropertySet values)
+        {
+            JsonObject jsonObject = new JsonObject();
+
+            foreach (KeyValuePair<string, object> pair in values)
             {
                 IJsonValue jsonValue;
                 if (pair.Value == null)
@@ -270,21 +332,12 @@ namespace QuestionsBackgroundTasks
                 jsonObject.Add(pair.Key, jsonValue);
             }
 
-            await FileIO.WriteTextAsync(file, jsonObject.Stringify());
+            return jsonObject;
         }
 
-        public static async void Import(StorageFile file)
+        private static void Import(IPropertySet values, JsonObject jsonObject)
         {
-            string jsonString = await FileIO.ReadTextAsync(file);
-
-            JsonObject jsonObject;
-            if (!JsonObject.TryParse(jsonString, out jsonObject))
-            {
-                // TODO: Notify user there was an error.
-                throw new Exception("Invalid JSON string.");
-            }
-
-            roamingSettings.Values.Clear();
+            values.Clear();
 
             foreach (string key in jsonObject.Keys)
             {
@@ -293,16 +346,16 @@ namespace QuestionsBackgroundTasks
                 switch (jsonValue.ValueType)
                 {
                     case JsonValueType.String:
-                        roamingSettings.Values.Add(key, jsonObject[key].GetString());
+                        values.Add(key, jsonObject[key].GetString());
                         break;
                     case JsonValueType.Number:
-                        roamingSettings.Values.Add(key, jsonObject[key].GetNumber());
+                        values.Add(key, jsonObject[key].GetNumber());
                         break;
                     case JsonValueType.Boolean:
-                        roamingSettings.Values.Add(key, jsonObject[key].GetBoolean());
+                        values.Add(key, jsonObject[key].GetBoolean());
                         break;
                     case JsonValueType.Null:
-                        roamingSettings.Values.Add(key, null);
+                        values.Add(key, null);
                         break;
                     default:
                         throw new Exception("Not supported JsonValueType.");

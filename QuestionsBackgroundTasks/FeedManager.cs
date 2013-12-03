@@ -16,31 +16,27 @@ namespace QuestionsBackgroundTasks
     {
         private static SyndicationClient client = new SyndicationClient();
 
-        public static IAsyncAction UpdateQuestions()
-        {
-            return UpdateQuestions(false);
-        }
-
         // 1. Load settings.
         // 2. query -> Retrieve feed.
         // 3. skipLastAllRead -> Add questions.
         // 4. Sort Questions (for tile and badge).
         // 5. Update tile.
         // 6. Update badge.
-        // TODO: Maybe buzz words check here.
-        public static IAsyncAction UpdateQuestions(bool skipLastAllRead)
+        // TODO: Maybe check for buzz words here.
+        public static IAsyncAction QueryWebsitesAsync()
         {
             return AsyncInfo.Run(async (cancellationToken) =>
             {
-                await SettingsManager.LoadAsync();
+                SettingsManager.Load();
                 await QuestionsManager.LoadAsync();
 
                 // Query websites in parallel.
-                List<Task> tasks = new List<Task>();
-                foreach (string website in SettingsManager.GetWebsiteKeys())
+                List<Task<QuerySingleWebsiteResult>> tasks = new List<Task<QuerySingleWebsiteResult>>();
+                IEnumerable<string> keys = SettingsManager.GetWebsiteKeys();
+                foreach (string website in keys)
                 {
                     string query = SettingsManager.ConcatenateAllTags(website);
-                    tasks.Add(UpdateQuestionsSingleWebsite(website, query, false).AsTask());
+                    tasks.Add(QuerySingleWebsiteAsync(website, query, false).AsTask());
                 }
 
                 if (tasks.Count == 0)
@@ -48,17 +44,42 @@ namespace QuestionsBackgroundTasks
                     // There is nothing to wait.
                     return;
                 }
+
                 await Task.Factory.ContinueWhenAll(tasks.ToArray(), (tasks2) => {});
 
-                QuestionsManager.LimitTo150AndSave();
-                UpdateTileAndBadge();
+                bool changed = false;
+                foreach (Task<QuerySingleWebsiteResult> task in tasks)
+                {
+                    QuerySingleWebsiteResult result = task.Result;
+                    if (result.Changed)
+                    {
+                        changed = true;
+                    }
+                }
+
+                // Only sort and save if questions changed.
+                if (changed)
+                {
+                    Debug.WriteLine("Questions list changed.");
+                    QuestionsManager.LimitTo150AndSave();
+                    UpdateTileAndBadge();
+                }
+                else
+                {
+                    Debug.WriteLine("Questions list did not change.");
+                }
             });
         }
 
-        public static IAsyncOperation<bool> UpdateQuestionsSingleWebsite(string website, string query, bool skipLastAllRead)
+        public static IAsyncOperation<QuerySingleWebsiteResult> QuerySingleWebsiteAsync(
+            string website,
+            string query,
+            bool skipLastAllRead)
         {
             return AsyncInfo.Run(async (cancellationToken) =>
             {
+                QuerySingleWebsiteResult result = new QuerySingleWebsiteResult();
+
                 Uri uri;
                 if (!SettingsManager.TryCreateUri(website, query, out uri))
                 {
@@ -84,17 +105,20 @@ namespace QuestionsBackgroundTasks
 
                     if (facility == FACILITY_HTTP && error == NOT_FOUND)
                     {
-                        return false; // File not found.
+                        result.FileFound = false;
+                        return result;
                     }
                     else if (facility == FACILITY_HTTP)
                     {
-                        // Swallow HTTP errors.
-                        return false; // Treat as file not found.
+                        // Swallow HTTP errors. Treat them as file not found.
+                        result.FileFound = false;
+                        return result;
                     }
                     else if (facility == FACILITY_WIN32 && error > 12001 && error < 12156)
                     {
-                        // Swallow WININET errors.
-                        return false; // Treat as file not found.
+                        // Swallow WININET errors. Treat as file not found.
+                        result.FileFound = false;
+                        return result;
                     }
                     else
                     {
@@ -102,9 +126,13 @@ namespace QuestionsBackgroundTasks
                     }
                 }
 
-                QuestionsManager.AddQuestions(website, feed, skipLastAllRead);
+                if (QuestionsManager.AddQuestions(website, feed, skipLastAllRead))
+                {
+                    result.Changed = true;
+                }
 
-                return true; // File found.
+                result.FileFound = true;
+                return result;
             });
         }
 
