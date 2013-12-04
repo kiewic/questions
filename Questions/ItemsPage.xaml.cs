@@ -202,9 +202,24 @@ namespace Questions
         {
             try
             {
-                var dialog = new MessageDialog("We received new settings!", sender + " " + args);
-                await dialog.ShowAsync();
+                string message = "Application data " + sender.Version + " synchronized on " + DateTime.Now;
+                Debug.WriteLine(message);
+
+                #if DEBUG
+                var runOperation = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+                {
+                    var dialog = new MessageDialog(message, "Roaming Application Data Synchronized");
+                    if (showOperation != null)
+                    {
+                        showOperation.Cancel();
+                    }
+                    showOperation = dialog.ShowAsync();
+                });
+                #endif
+
+                SettingsManager.Unload();
                 SettingsManager.Load();
+
                 // Do an Update. This handler is called when settings in another device change.
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => DisplayOrUpdateQuestions(true));
             }

@@ -189,11 +189,7 @@ namespace QuestionsBackgroundTasks
 
         public static void DisplayQuestions(ListView listView, IList<BindableQuestion> list)
         {
-            if (listView.ItemsSource == null || SettingsManager.Changed)
-            {
-                listView.ItemsSource = list;
-                SettingsManager.Changed = false;
-            }
+            listView.ItemsSource = list;
         }
 
         // TODO: I fthis is an expensive operation, maybe we should consider to cache the result.

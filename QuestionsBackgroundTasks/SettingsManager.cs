@@ -49,29 +49,9 @@ namespace QuestionsBackgroundTasks
             }
         }
 
-        public static bool Changed
-        {
-            get
-            {
-                CheckSettingsAreLoaded();
-
-                if (localValues.ContainsKey("Changed"))
-                {
-                    return (bool)localValues["Changed"];
-                }
-
-                // If we do not know if someting has changed, lets assume it has.
-                return true;
-            }
-            set
-            {
-                localValues["Changed"] = value;
-            }
-        }
-
         public static void Load()
         {
-            if (roamingValues != null)
+            if (roamingValues != null && localValues != null)
             {
                 // Settings already loaded, there is nothing to load.
                 return;
@@ -83,11 +63,18 @@ namespace QuestionsBackgroundTasks
             roamingValues = roamingSettings.Values;
             localValues = localSettings.Values;
 
+            Debug.WriteLine("Application data version: {0}", ApplicationData.Current.Version);
             Debug.WriteLine("Roaming settings storage quota: {0} KB", ApplicationData.Current.RoamingStorageQuota);
             Debug.WriteLine("Roaming settings folder: {0}", ApplicationData.Current.RoamingFolder.Path);
             Debug.WriteLine("Local settings folder: {0}", ApplicationData.Current.LocalFolder.Path);
 
             InitializeRoamingSettings();
+        }
+
+        public static void Unload()
+        {
+            roamingValues = null;
+            localValues = null;
         }
 
         private static void InitializeRoamingSettings()

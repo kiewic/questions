@@ -93,11 +93,6 @@ namespace Questions
                 // Display red color while we figure it out a better way to diplay errors.
                 TagBox.Foreground = new SolidColorBrush(Colors.Red);
             }
-
-            if (result.Changed)
-            {
-                SettingsManager.Changed = true;
-            }
         }
 
         private void RemoveButton_Click(object sender, RoutedEventArgs e)

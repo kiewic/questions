@@ -47,17 +47,18 @@ namespace QuestionsBackgroundTasks
 
                 await Task.Factory.ContinueWhenAll(tasks.ToArray(), (tasks2) => {});
 
+                bool listChanged = false;
                 foreach (Task<QuerySingleWebsiteResult> task in tasks)
                 {
                     QuerySingleWebsiteResult result = task.Result;
                     if (result.Changed)
                     {
-                        SettingsManager.Changed = true;
+                        listChanged = true;
                     }
                 }
 
-                // Only sort and save if questions changed.
-                if (SettingsManager.Changed)
+                // Only limit and save questions if list changed.
+                if (listChanged)
                 {
                     Debug.WriteLine("Questions list changed.");
                     QuestionsManager.LimitTo150AndSave();
