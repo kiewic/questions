@@ -44,7 +44,7 @@ namespace Questions
         /// search results, and so forth.
         /// </summary>
         /// <param name="args">Details about the launch request and process.</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs args)
+        protected override async void OnLaunched(LaunchActivatedEventArgs args)
         {
             Frame rootFrame = Window.Current.Content as Frame;
 
@@ -69,6 +69,9 @@ namespace Questions
                 // When the navigation stack isn't restored navigate to the first page,
                 // configuring the new page by passing required information as a navigation
                 // parameter
+
+                // In version 1.0.4.x we moved the questions file from the local folder to the roaming folder.
+                await QuestionsManager.MoveFileFromLocalToRoaming();
 
                 bool isNewApp = SettingsManager.IsEmpty();
                 Type initialPage = typeof(ItemsPage);

@@ -19,14 +19,14 @@ namespace QuestionsBackgroundTasks
 
         // This is a private method, and does not require synchronization. We assume caller is
         // already holding the lock.
-        private static async Task<StorageFile> GetOrCreateFileAsync(string fileName)
+        private static async Task<StorageFile> GetOrCreateFileAsync(StorageFolder storageFolder, string fileName)
         {
             StorageFile storageFile = null;
 
             try
             {
-                Debug.WriteLine("File location: {0}", ApplicationData.Current.LocalFolder.Path);
-                storageFile = await ApplicationData.Current.LocalFolder.GetFileAsync(fileName);
+                Debug.WriteLine("File location: {0}", storageFolder.Path);
+                storageFile = await storageFolder.GetFileAsync(fileName);
             }
             catch (FileNotFoundException)
             {
@@ -35,18 +35,18 @@ namespace QuestionsBackgroundTasks
 
             if (storageFile == null)
             {
-                storageFile = await ApplicationData.Current.LocalFolder.CreateFileAsync(fileName);
+                storageFile = await storageFolder.CreateFileAsync(fileName);
             }
 
             return storageFile;
         }
 
-        public static async Task<string> LoadAsync(string fileName)
+        public static async Task<string> LoadAsync(StorageFolder storageFolder, string fileName)
         {
             await LockAsync();
             try
             {
-                StorageFile storageFile = await GetOrCreateFileAsync(fileName);
+                StorageFile storageFile = await GetOrCreateFileAsync(storageFolder, fileName);
 
                 string content = await FileIO.ReadTextAsync(storageFile);
                 Debug.WriteLine("Length of read text: {0}", content.Length);
@@ -58,12 +58,12 @@ namespace QuestionsBackgroundTasks
             }
         }
 
-        public static async Task SaveAsync(string fileName, string content)
+        public static async Task SaveAsync(StorageFolder storageFolder, string fileName, string content)
         {
             await LockAsync();
             try
             {
-                StorageFile storageFile = await GetOrCreateFileAsync(fileName);
+                StorageFile storageFile = await GetOrCreateFileAsync(storageFolder, fileName);
                 Debug.WriteLine("Length of written text: {0}", content.Length);
                 await FileIO.WriteTextAsync(storageFile, content);
             }
@@ -73,14 +73,14 @@ namespace QuestionsBackgroundTasks
             }
         }
 
-        public static async Task<bool> FileExistsAsync(string fileName)
+        public static async Task<bool> FileExistsAsync(StorageFolder storageFolder, string fileName)
         {
             await LockAsync();
             try
             {
                 try
                 {
-                    StorageFile storageFile = await ApplicationData.Current.LocalFolder.GetFileAsync(fileName);
+                    StorageFile storageFile = await storageFolder.GetFileAsync(fileName);
                     return true;
                 }
                 catch (FileNotFoundException)
@@ -94,12 +94,12 @@ namespace QuestionsBackgroundTasks
             }
         }
 
-        public static async Task DeleteAsync(string fileName)
+        public static async Task DeleteAsync(StorageFolder storageFolder, string fileName)
         {
             await LockAsync();
             try
             {
-                StorageFile storageFile = await GetOrCreateFileAsync(fileName);
+                StorageFile storageFile = await GetOrCreateFileAsync(storageFolder, fileName);
                 await storageFile.DeleteAsync();
             }
             finally
@@ -107,6 +107,21 @@ namespace QuestionsBackgroundTasks
                 Unlock();
             }
         }
+
+        public static async Task MoveAsync(StorageFolder sourceFolder, StorageFolder destinationFolder, string fileName)
+        {
+            await LockAsync();
+            try
+            {
+                StorageFile storageFile = await GetOrCreateFileAsync(sourceFolder, fileName);
+                await storageFile.MoveAsync(destinationFolder);
+            }
+            finally
+            {
+                Unlock();
+            }
+        }
+
 
         // TODO: Interesting. Is there a better way to add synchronization?
         private static Task<bool> LockAsync()

@@ -22,8 +22,13 @@ Stack Overflow; StackOverflow; Stack Exchange; Questions; Reader; StackExchange;
 
 ### Notes
 
-Questions 1.0.4.0 features:
+Questions 1.0.4.x features:
 
+* Questions now are synchronized across devices.
+* New "mark as read" only selected questions.
+* Question list gets updated when the app is running and a background task is executed (Windows 8.1 bug).
+* Question list gets updated when the app is running and roaming application data is synchronized.
+* Import and export settings from the settings charm.
 * Fixing tutorial typo.
 
 Questions 1.0.3.0 features:

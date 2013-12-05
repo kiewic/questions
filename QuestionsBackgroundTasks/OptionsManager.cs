@@ -9,12 +9,14 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Data.Json;
 using Windows.Foundation;
+using Windows.Storage;
 using Windows.UI.Xaml.Controls;
 
 namespace QuestionsBackgroundTasks
 {
     public sealed class OptionsManager
     {
+        private static StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
         private const string websitesFileName = "sites.json";
         private const string websitesUriString = "http://api.stackexchange.com/2.1/sites?page=1&pagesize=999&filter=!)Qk)IzwPu2_4AJke)ujE)iqv";
         private const string tagsUriString = "http://api.stackexchange.com/2.1/tags?page=1&pagesize=100&order=desc&sort=popular&site={0}&filter=!6UYchuBldenIr";
@@ -23,7 +25,7 @@ namespace QuestionsBackgroundTasks
         {
             return AsyncInfo.Run(async (cancellationToken) =>
             {
-                string content = await FilesManager.LoadAsync(websitesFileName);
+                string content = await FilesManager.LoadAsync(storageFolder, websitesFileName);
 
                 if (String.IsNullOrEmpty(content))
                 {
@@ -37,7 +39,7 @@ namespace QuestionsBackgroundTasks
                     }
 
                     // Save it locally.
-                    await FilesManager.SaveAsync(websitesFileName, content);
+                    await FilesManager.SaveAsync(storageFolder, websitesFileName, content);
                 }
 
                 // Parse content.
@@ -73,7 +75,7 @@ namespace QuestionsBackgroundTasks
             {
                 // Create a unique file name per website.
                 string tagsFileName = "tags." + apiSiteParameter + ".json";
-                string content = await FilesManager.LoadAsync(tagsFileName);
+                string content = await FilesManager.LoadAsync(storageFolder, tagsFileName);
 
                 if (String.IsNullOrEmpty(content))
                 {
@@ -88,7 +90,7 @@ namespace QuestionsBackgroundTasks
                     }
 
                     // Save it locally.
-                    await FilesManager.SaveAsync(tagsFileName, content);
+                    await FilesManager.SaveAsync(storageFolder, tagsFileName, content);
                 }
 
                 // Parse content.

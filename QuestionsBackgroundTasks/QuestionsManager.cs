@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Data.Json;
 using Windows.Foundation;
+using Windows.Storage;
 using Windows.UI.Xaml.Controls;
 using Windows.Web.Syndication;
 
@@ -16,6 +17,7 @@ namespace QuestionsBackgroundTasks
     public sealed class QuestionsManager
     {
         private static AutoResetEvent addEvent = new AutoResetEvent(true);
+        private static StorageFolder storageFolder = ApplicationData.Current.RoamingFolder;
         private const string settingsFileName = "questions.json";
         private static JsonObject rootObject;
         private static JsonObject questionsCollection;
@@ -30,7 +32,7 @@ namespace QuestionsBackgroundTasks
                     return;
                 }
 
-                string jsonString = await FilesManager.LoadAsync(settingsFileName);
+                string jsonString = await FilesManager.LoadAsync(storageFolder, settingsFileName);
 
                 if (!JsonObject.TryParse(jsonString, out rootObject))
                 {
@@ -52,7 +54,7 @@ namespace QuestionsBackgroundTasks
         {
             return AsyncInfo.Run(async (cancellationToken) =>
             {
-                await FilesManager.SaveAsync(settingsFileName, rootObject.Stringify());
+                await FilesManager.SaveAsync(storageFolder, settingsFileName, rootObject.Stringify());
             });
         }
 
@@ -233,20 +235,39 @@ namespace QuestionsBackgroundTasks
             }
         }
 
-        internal static async Task<string> MigrateLastAllRead()
+        public static IAsyncAction MoveFileFromLocalToRoaming()
         {
-            string value = "";
-
-            await QuestionsManager.LoadAsync();
-
-            if (rootObject.ContainsKey("LastAllRead"))
+            return AsyncInfo.Run(async (cancellationToken) =>
             {
-                value = rootObject.GetNamedString("LastAllRead");
-                rootObject.Remove("LastAllRead");
-                await QuestionsManager.SaveAsync();
-            }
+                // Look in both folders.
+                bool localExists = await FilesManager.FileExistsAsync(ApplicationData.Current.LocalFolder, settingsFileName);
+                bool roamingExists = await FilesManager.FileExistsAsync(ApplicationData.Current.RoamingFolder, settingsFileName);
 
-            return value;
+                if (localExists && !roamingExists)
+                {
+                    // File only in local folder. Move it to roaming folder.
+                    await FilesManager.MoveAsync(
+                        ApplicationData.Current.LocalFolder,
+                        ApplicationData.Current.RoamingFolder,
+                        settingsFileName);
+
+                    Debug.WriteLine("File moved: {0}", settingsFileName);
+                    return;
+                }
+
+                if (localExists && roamingExists)
+                {
+                    // File in both folders. Remove local version. Roaming version must come from a device
+                    // with a more recent version of the app.
+                    await FilesManager.DeleteAsync(ApplicationData.Current.LocalFolder, settingsFileName);
+
+                    Debug.WriteLine("Duplicated file removed: {0}", settingsFileName);
+                    return;
+                }
+
+                // Anything else means we have the configuration desired, or it is a new app.
+                Debug.WriteLine("Desired situation: {0}", settingsFileName);
+            });
         }
     }
 }

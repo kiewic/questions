@@ -207,7 +207,7 @@ namespace Questions
                 Debug.WriteLine(message);
 
                 #if DEBUG
-                var runOperation = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+                var runOperation = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     var dialog = new MessageDialog(message, "Roaming Application Data Synchronized");
                     if (showOperation != null)
@@ -221,9 +221,9 @@ namespace Questions
                 SettingsManager.Unload();
                 SettingsManager.Load();
 
-                // Do a query. This handler is called when settings in another device change.
-                // Sources maybe changed in the other device.
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => UpdateQuestionsView(true));
+                // Do not force a query. This handler is called when settings/questions in another device are changed.
+                // Simply display the new list of questions.
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => UpdateQuestionsView(false));
             }
             catch (Exception ex)
             {
