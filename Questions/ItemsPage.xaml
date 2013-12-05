@@ -9,9 +9,6 @@
     mc:Ignorable="d">
 
     <Page.Resources>
-        <Style x:Key="InlineButton" TargetType="Button">
-            <Setter Property="VerticalAlignment" Value="Stretch" />
-        </Style>
         <Style x:Key="BottomPageButton" TargetType="Button">
             <Setter Property="FontSize" Value="30" />
         </Style>
@@ -29,12 +26,7 @@
                         <TextBlock FontSize="12" Foreground="DarkGray" Text="{Binding Website}" />
                     </StackPanel>
                 </StackPanel>
-                <StackPanel x:Name="ItemButtons" Orientation="Horizontal" HorizontalAlignment="Stretch" Grid.Column="1" Visibility="Collapsed">
-                    <Button Style="{StaticResource InlineButton}">Open</Button>
-                    <Button Style="{StaticResource InlineButton}">Dismiss</Button>
-                    <Button Style="{StaticResource InlineButton}">Share</Button>
-                </StackPanel>
-                <TextBlock Grid.Column="2" FontSize="28" FontWeight="Bold" Foreground="DarkGray" Text="{Binding PubDateDiff}" />
+                <TextBlock Grid.Column="1" FontSize="28" FontWeight="Bold" Foreground="DarkGray" Text="{Binding PubDateDiff}" />
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="NarrowQuestion">
