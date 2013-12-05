@@ -12,6 +12,9 @@
         <Style x:Key="InlineButton" TargetType="Button">
             <Setter Property="VerticalAlignment" Value="Stretch" />
         </Style>
+        <Style x:Key="BottomPageButton" TargetType="Button">
+            <Setter Property="FontSize" Value="30" />
+        </Style>
         <DataTemplate x:Key="WideQuestion">
             <Grid x:Name="Foo" HorizontalAlignment="Stretch" Margin="0">
                 <Grid.ColumnDefinitions>
@@ -84,15 +87,19 @@
             Grid.Row="1"
             x:Name="QuestionsView"
             ItemClick="QuestionsView_ItemClick"
+            SelectionChanged="QuestionsView_SelectionChanged"
             IsItemClickEnabled="True"
-            SelectionMode="Single"
+            SelectionMode="Multiple"
             Padding="30"
             ItemTemplate="{StaticResource WideQuestion}"
             ItemContainerStyle="{StaticResource CustomizedListViewItemContainer}"
             IsSwipeEnabled="True">
         </ListView>
         <TextBlock Grid.Row="1" x:Name="StatusBlock" Style="{StaticResource StatusBlock}">There are no more questions :(</TextBlock>
-        <Button Grid.Row="2" HorizontalAlignment="Center" FontSize="30" Click="AllReadButton_Click">Mark All As Read</Button>
+        <StackPanel Grid.Row="2" HorizontalAlignment="Center" Orientation="Horizontal">
+            <Button x:Name="MarkAllReadButton" Style="{StaticResource BottomPageButton}" Click="MarkAllReadButton_Click">Mark All As Read</Button>
+            <Button x:Name="MarkReadButton" Style="{StaticResource BottomPageButton}" Click="MarkReadButton_Click" Visibility="Collapsed">Mark As Read</Button>
+        </StackPanel>
         <VisualStateManager.VisualStateGroups>
             <!-- Visual states reflect the application's view state -->
             <VisualStateGroup x:Name="ApplicationViewStates">
@@ -107,7 +114,7 @@
                             <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource NarrowQuestion}" />
                         </ObjectAnimationUsingKeyFrames>
                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="QuestionsView" Storyboard.TargetProperty="SelectionMode">
-                            <DiscreteObjectKeyFrame KeyTime="0" Value="None" />
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="Multiple" />
                         </ObjectAnimationUsingKeyFrames>
                     </Storyboard>
                 </VisualState>

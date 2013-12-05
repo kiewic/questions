@@ -165,6 +165,14 @@ namespace QuestionsBackgroundTasks
             return true;
         }
 
+        public static void RemoveQuestion(string id)
+        {
+            if (questionsCollection.ContainsKey(id))
+            {
+                questionsCollection.Remove(id);
+            }
+        }
+
         private static bool UpdateQuestion(string website, SyndicationItem item)
         {
             JsonObject questionObject = questionsCollection.GetNamedObject(item.Id);

@@ -79,7 +79,8 @@ namespace Questions
             RegisterForShare();
             RegisterDataChanged();
 
-            DisplayOrUpdateQuestions(false);
+            // Load question into ListView for first time.
+            UpdateQuestionsView(false);
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -92,7 +93,7 @@ namespace Questions
             UnregisterBackgroundTask();
         }
 
-        private async void DisplayOrUpdateQuestions(bool forceQuery)
+        private async void UpdateQuestionsView(bool forceQuery)
         {
             StatusBlock.Visibility = Visibility.Collapsed;
 
@@ -181,8 +182,8 @@ namespace Questions
                 // do not share the same QuestionManager static vars.
                 QuestionsManager.Unload();
 
-                // Do not force an Update. This handler is called from the background task that just made an updated.
-                DisplayOrUpdateQuestions(false);
+                // Do not force a query. This handler is called from the background task that just made a query.
+                UpdateQuestionsView(false);
             });
             #pragma warning restore 4014
         }
@@ -220,8 +221,9 @@ namespace Questions
                 SettingsManager.Unload();
                 SettingsManager.Load();
 
-                // Do an Update. This handler is called when settings in another device change.
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => DisplayOrUpdateQuestions(true));
+                // Do a query. This handler is called when settings in another device change.
+                // Sources maybe changed in the other device.
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => UpdateQuestionsView(true));
             }
             catch (Exception ex)
             {
@@ -276,7 +278,8 @@ namespace Questions
         {
             try
             {
-                DisplayOrUpdateQuestions(true);
+                // Force a query, that's exactly why the user clicked this button.
+                UpdateQuestionsView(true);
             }
             catch (Exception ex)
             {
@@ -291,7 +294,21 @@ namespace Questions
             await Launcher.LaunchUriAsync(question.Link);
         }
 
-        private async void AllReadButton_Click(object sender, RoutedEventArgs e)
+        private void QuestionsView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (QuestionsView.SelectedItems.Count > 0)
+            {
+                MarkAllReadButton.Visibility = Visibility.Collapsed;
+                MarkReadButton.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                MarkAllReadButton.Visibility = Visibility.Visible;
+                MarkReadButton.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private async void MarkAllReadButton_Click(object sender, RoutedEventArgs e)
         {
             IList<BindableQuestion> list = QuestionsManager.GetSortedQuestions();
             if (list.Count == 0)
@@ -313,6 +330,20 @@ namespace Questions
             FeedManager.ClearTileAndBadge();
 
             RefreshButton_Click(null, null);
+        }
+
+        private void MarkReadButton_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (BindableQuestion question in QuestionsView.SelectedItems)
+            {
+                QuestionsManager.RemoveQuestion(question.Id);
+            }
+
+            var saveOperation = QuestionsManager.SaveAsync();
+
+            // Do not force a query. We are just removing some questions,
+            // the list may have more questions.
+            UpdateQuestionsView(false);
         }
 
         private void Page_KeyUp(object sender, KeyRoutedEventArgs e)
