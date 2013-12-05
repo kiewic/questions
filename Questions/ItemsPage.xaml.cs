@@ -162,32 +162,6 @@ namespace Questions
             }
         }
 
-        private void TaskCompletedHandler(BackgroundTaskRegistration sender, BackgroundTaskCompletedEventArgs args)
-        {
-            string message = sender.Name + " completed on " + DateTime.Now;
-            Debug.WriteLine(message);
-
-            #pragma warning disable 4014
-            Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                #if DEBUG
-                var dialog = new MessageDialog(message, "Task Completed");
-                if (showOperation != null)
-                {
-                    showOperation.Cancel();
-                }
-                showOperation = dialog.ShowAsync();
-                #endif
-
-                // Unload is required, so the qeustions get uploaded from the file. It seems that the background trask and the app process
-                // do not share the same QuestionManager static vars.
-                QuestionsManager.Unload();
-
-                // Do not force a query. This handler is called from the background task that just made a query.
-                UpdateQuestionsView(false);
-            });
-            #pragma warning restore 4014
-        }
-
         private void RegisterDataChanged()
         {
             dataChangedHandler = new TypedEventHandler<ApplicationData, object>(DataChangedHandler);
@@ -199,36 +173,55 @@ namespace Questions
             ApplicationData.Current.DataChanged -= dataChangedHandler;
         }
 
-        private async void DataChangedHandler(ApplicationData sender, object args)
+        private void TaskCompletedHandler(BackgroundTaskRegistration sender, BackgroundTaskCompletedEventArgs args)
         {
+            string message = sender.Name + " completed on " + DateTime.Now;
+            string title = "Task Completed";
+            HandleTaskCompletedOrDataChanged(message, title);
+        }
+
+        private void DataChangedHandler(ApplicationData sender, object args)
+        {
+            string message = "Application data " + sender.Version + " synchronized on " + DateTime.Now;
+            string title = "Roaming Application Data Synchronized";
+            HandleTaskCompletedOrDataChanged(message, title);
+        }
+
+        private async void HandleTaskCompletedOrDataChanged(string message, string title)
+        {
+            Debug.WriteLine(message);
+
+            #if DEBUG
             try
             {
-                string message = "Application data " + sender.Version + " synchronized on " + DateTime.Now;
-                Debug.WriteLine(message);
-
-                #if DEBUG
                 var runOperation = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    var dialog = new MessageDialog(message, "Roaming Application Data Synchronized");
+                    var dialog = new MessageDialog(message, title);
                     if (showOperation != null)
                     {
                         showOperation.Cancel();
                     }
                     showOperation = dialog.ShowAsync();
                 });
-                #endif
-
-                SettingsManager.Unload();
-                SettingsManager.Load();
-
-                // Do not force a query. This handler is called when settings/questions in another device are changed.
-                // Simply display the new list of questions.
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => UpdateQuestionsView(false));
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex);
             }
+            #endif
+
+            // When task completed, unload is required, so the questions get loaded from the file.
+            // It seems that the background trask and the app process do not share the same QuestionManager
+            // static vars.
+            // When data changed, unload is required, so the questions get loaded from the file
+            // incase the questions file had came from another device.
+            QuestionsManager.Unload();
+
+            // Do not force a query when task completed. This handler is called just after the background task
+            // made a query.
+            // Do not force a query when data changed. This handler is called when settings/questions in another device
+            // change. Simply display the latest list of questions.
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => UpdateQuestionsView(false));
         }
 
         private void RegisterShortcuts()
