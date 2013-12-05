@@ -243,8 +243,8 @@ namespace QuestionsBackgroundTasks
             CheckSettingsAreLoaded();
 
             JsonObject jsonObject = new JsonObject();
-            jsonObject.Add("RoamingValues", Export(roamingValues));
-            jsonObject.Add("LocalValues", Export(localValues));
+            jsonObject.Add("Roaming", Export(roamingValues));
+            jsonObject.Add("Local", Export(localValues));
 
             string jsonString = jsonObject.Stringify();
             await FileIO.WriteTextAsync(file, jsonString);
@@ -265,18 +265,18 @@ namespace QuestionsBackgroundTasks
                 return;
             }
 
-            if (jsonObject.ContainsKey("RoamingValues"))
+            if (jsonObject.ContainsKey("Roaming"))
             {
-                IJsonValue jsonValue = jsonObject.GetNamedValue("RoamingValues");
+                IJsonValue jsonValue = jsonObject.GetNamedValue("Roaming");
                 if (jsonValue.ValueType == JsonValueType.Object)
                 {
                     Import(roamingValues, jsonValue.GetObject());
                 }
             }
 
-            if (jsonObject.ContainsKey("LocalValues"))
+            if (jsonObject.ContainsKey("Local"))
             {
-                IJsonValue jsonValue = jsonObject.GetNamedValue("LocalValues");
+                IJsonValue jsonValue = jsonObject.GetNamedValue("Local");
                 if (jsonValue.ValueType == JsonValueType.Object)
                 {
                     Import(localValues, jsonValue.GetObject());
