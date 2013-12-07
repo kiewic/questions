@@ -20,7 +20,9 @@ namespace QuestionsBackgroundTasks
     {
         private const string LatestPubDateKey = "LatestPubDate";
         private const string LatestQueryDateKey = "LatestQueryDate";
-        private static JsonObject websitesCollection;
+        private const string WebsitesKey = "Websites";
+        private static JsonObject roamingWebsites;
+        private static JsonObject localWebsites;
         private static IPropertySet roamingValues;
         private static IPropertySet localValues;
 
@@ -77,6 +79,9 @@ namespace QuestionsBackgroundTasks
         {
             roamingValues = null;
             localValues = null;
+
+            roamingWebsites = null;
+            localWebsites = null;
         }
 
         private static void InitializeRoamingSettings()
@@ -92,20 +97,33 @@ namespace QuestionsBackgroundTasks
                 roamingValues["UserId"] = Guid.NewGuid().ToString();
             }
 
-            if (!roamingValues.ContainsKey("Websites"))
+            if (!roamingValues.ContainsKey(WebsitesKey))
             {
                 JsonObject jsonObject = new JsonObject();
-                roamingValues["Websites"] = jsonObject.Stringify();
+                roamingValues[WebsitesKey] = jsonObject.Stringify();
             }
 
-            // Parse websites.
-            string jsonString = roamingValues["Websites"].ToString();
-            websitesCollection = JsonObject.Parse(jsonString);
+            if (!localValues.ContainsKey(WebsitesKey))
+            {
+                JsonObject jsonObject = new JsonObject();
+                localValues[WebsitesKey] = jsonObject.Stringify();
+            }
+
+            // Parse roaming websites.
+            string jsonString = roamingValues[WebsitesKey].ToString();
+            roamingWebsites = JsonObject.Parse(jsonString);
+
+            // Parse local websites.
+            jsonString = localValues[WebsitesKey].ToString();
+            localWebsites = JsonObject.Parse(jsonString);
+
+            SyncWebsites();
         }
 
         public static void Save()
         {
-            roamingValues["Websites"] = websitesCollection.Stringify();
+            roamingValues[WebsitesKey] = roamingWebsites.Stringify();
+            localValues[WebsitesKey] = localWebsites.Stringify();
         }
 
         public static IAsyncOperation<BindableWebsite> AddWebsiteAndSave(BindableWebsiteOption websiteOption)
@@ -118,21 +136,24 @@ namespace QuestionsBackgroundTasks
 
                 string websiteSiteUrl = websiteOption.SiteUrl;
 
-                JsonObject websiteObject = null;
-                if (websitesCollection.ContainsKey(websiteSiteUrl))
+                JsonObject roamingWebsiteObject = null;
+                if (roamingWebsites.ContainsKey(websiteSiteUrl))
                 {
                     // We already have this website. Nothing to do.
-                    websiteObject = websitesCollection.GetNamedObject(websiteSiteUrl);
+                    roamingWebsiteObject = roamingWebsites.GetNamedObject(websiteSiteUrl);
                 }
-                else if (websitesCollection.Count < websitesLimit)
+                else if (roamingWebsites.Count < websitesLimit)
                 {
-                    websiteObject = new JsonObject();
-                    websiteObject.SetNamedValue("Tags", new JsonObject());
-                    websiteObject.SetNamedValue("Name", JsonValue.CreateStringValue(websiteOption.ToString()));
-                    websiteObject.SetNamedValue("ApiSiteParameter", JsonValue.CreateStringValue(websiteOption.ApiSiteParameter));
-                    websiteObject.SetNamedValue("IconUrl", JsonValue.CreateStringValue(websiteOption.IconUrl));
-                    websiteObject.SetNamedValue("FaviconUrl", JsonValue.CreateStringValue(websiteOption.FaviconUrl));
-                    websitesCollection.SetNamedValue(websiteSiteUrl, websiteObject);
+                    roamingWebsiteObject = new JsonObject();
+                    roamingWebsiteObject.SetNamedValue("Tags", new JsonObject());
+                    roamingWebsiteObject.SetNamedValue("Name", JsonValue.CreateStringValue(websiteOption.ToString()));
+                    roamingWebsiteObject.SetNamedValue("ApiSiteParameter", JsonValue.CreateStringValue(websiteOption.ApiSiteParameter));
+                    roamingWebsiteObject.SetNamedValue("IconUrl", JsonValue.CreateStringValue(websiteOption.IconUrl));
+                    roamingWebsiteObject.SetNamedValue("FaviconUrl", JsonValue.CreateStringValue(websiteOption.FaviconUrl));
+                    roamingWebsites.SetNamedValue(websiteSiteUrl, roamingWebsiteObject);
+
+                    JsonObject localWebsiteObject = new JsonObject();
+                    localWebsites.SetNamedValue(websiteSiteUrl, localWebsiteObject);
 
                     Save();
                 }
@@ -145,7 +166,7 @@ namespace QuestionsBackgroundTasks
                     return null;
                 }
 
-                return new BindableWebsite(websiteSiteUrl, websiteObject);
+                return new BindableWebsite(websiteSiteUrl, roamingWebsiteObject);
             });
         }
 
@@ -153,24 +174,28 @@ namespace QuestionsBackgroundTasks
         {
             CheckSettingsAreLoaded();
 
-            websitesCollection.Remove(website.ToString());
+            string websiteUrl = website.ToString();
 
-            // TODO: Remove only questions containing this website.
-            QuestionsManager.ClearQuestions();
+            roamingWebsites.Remove(websiteUrl);
+            localWebsites.Remove(websiteUrl);
+
+            // Remove only questions containing this website. Then save, do not wait until save is completed.
+            QuestionsManager.RemoveQuestions(websiteUrl, null);
+            var saveOperation = QuestionsManager.SaveAsync();
 
             Save();
         }
 
         internal static IEnumerable<string> GetWebsiteKeys()
         {
-            return websitesCollection.Keys;
+            return roamingWebsites.Keys;
         }
 
         internal static string GetWebsiteFaviconUrl(string website)
         {
-            if (websitesCollection.ContainsKey(website))
+            if (roamingWebsites.ContainsKey(website))
             {
-                JsonObject websiteObject = websitesCollection.GetNamedObject(website);
+                JsonObject websiteObject = roamingWebsites.GetNamedObject(website);
                 if (websiteObject.ContainsKey("FaviconUrl"))
                 {
                     return websiteObject.GetNamedString("FaviconUrl");
@@ -185,7 +210,7 @@ namespace QuestionsBackgroundTasks
             Load();
 
             listView.Items.Clear();
-            foreach (var keyValuePair in websitesCollection)
+            foreach (var keyValuePair in roamingWebsites)
             {
                 var website = new BindableWebsite(keyValuePair.Key, keyValuePair.Value.GetObject());
                 listView.Items.Add(website);
@@ -196,7 +221,7 @@ namespace QuestionsBackgroundTasks
         {
             CheckSettingsAreLoaded();
 
-            JsonObject websiteObject = websitesCollection.GetNamedObject(website);
+            JsonObject websiteObject = roamingWebsites.GetNamedObject(website);
             JsonObject tagsCollection = websiteObject.GetNamedObject("Tags");
 
             StringBuilder builder = new StringBuilder();
@@ -211,11 +236,11 @@ namespace QuestionsBackgroundTasks
             return builder.ToString();
         }
 
-        public static DateTimeOffset GetLastestPubDate(string website)
+        public static DateTimeOffset GetLastestPubDate(string websiteUrl)
         {
             CheckSettingsAreLoaded();
 
-            JsonObject websiteObject = websitesCollection.GetNamedObject(website);
+            JsonObject websiteObject = localWebsites.GetNamedObject(websiteUrl);
 
             if (websiteObject.ContainsKey(LatestPubDateKey))
             {
@@ -230,7 +255,7 @@ namespace QuestionsBackgroundTasks
         {
             CheckSettingsAreLoaded();
 
-            JsonObject websiteObject = websitesCollection.GetNamedObject(website);
+            JsonObject websiteObject = localWebsites.GetNamedObject(website);
 
             string lastestPubDateString = lastestPubDate.ToString();
             websiteObject.SetNamedValue(LatestPubDateKey, JsonValue.CreateStringValue(lastestPubDateString));
@@ -254,7 +279,7 @@ namespace QuestionsBackgroundTasks
         {
             Load();
 
-            return (websitesCollection.Count == 0) ? true : false;
+            return (roamingWebsites.Count == 0) ? true : false;
         }
 
         private static void CheckSettingsAreLoaded()
@@ -379,6 +404,35 @@ namespace QuestionsBackgroundTasks
             // Any value may be missing from the settings file, make sure all
             // values are initialized and websites are parsed.
             InitializeRoamingSettings();
+        }
+
+        public static void SyncWebsites()
+        {
+            CheckSettingsAreLoaded();
+
+            if (roamingWebsites.Count == localWebsites.Count)
+            {
+                // There is nothing to do.
+                return;
+            }
+
+            // Remove from local websites not in roaming.
+            foreach (string website in localWebsites.Keys)
+            {
+                if (!roamingWebsites.ContainsKey(website))
+                {
+                    localWebsites.Remove(website);
+                }
+            }
+
+            // Add websites from roaming into local.
+            foreach (string website in roamingWebsites.Keys)
+            {
+                if (!localWebsites.ContainsKey(website))
+                {
+                    localWebsites.Add(website, new JsonObject());
+                }
+            }
         }
     }
 }

@@ -31,7 +31,7 @@ namespace QuestionsBackgroundTasks
             }
         }
 
-        public string Website
+        public string WebsiteUrl
         {
             get
             {
@@ -89,8 +89,16 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                string website = Website;
-                return SettingsManager.GetWebsiteFaviconUrl(website);
+                string websiteUrl = WebsiteUrl;
+                return SettingsManager.GetWebsiteFaviconUrl(websiteUrl);
+            }
+        }
+
+        public JsonObject Categories
+        {
+            get
+            {
+                return json.GetNamedObject("Categories");
             }
         }
     }

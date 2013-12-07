@@ -184,6 +184,11 @@ namespace Questions
         {
             string message = "Application data " + sender.Version + " synchronized on " + DateTime.Now;
             string title = "Roaming Application Data Synchronized";
+
+            // When data changes. Settings should be unloaded/loaded so websites get synchronized.
+            SettingsManager.Unload();
+            SettingsManager.Load();
+
             HandleTaskCompletedOrDataChanged(message, title);
         }
 
@@ -310,8 +315,8 @@ namespace Questions
             }
 
             // Clear questions in the frontend and in the backend.
-            QuestionsManager.ClearQuestions();
             QuestionsView.ItemsSource = null;
+            QuestionsManager.RemoveQuestions(null, null);
 
             await QuestionsManager.SaveAsync();
 

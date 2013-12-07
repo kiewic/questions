@@ -17,7 +17,7 @@ namespace QuestionsBackgroundTasks
     public sealed class QuestionsManager
     {
         private static AutoResetEvent addEvent = new AutoResetEvent(true);
-        private static StorageFolder storageFolder = ApplicationData.Current.RoamingFolder;
+        private static StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
         private const string settingsFileName = "questions.json";
         private static JsonObject rootObject;
         private static JsonObject questionsCollection;
@@ -67,11 +67,12 @@ namespace QuestionsBackgroundTasks
         }
 
         // This method can be call simultaneously. Make sure only one thread is touching it.
-        public static bool AddQuestions(string website, SyndicationFeed feed, bool skipLatestPubDate)
+        public static bool AddQuestions(string websiteUrl, SyndicationFeed feed, bool skipLatestPubDate)
         {
             bool questionsChanged = false;
 
-            DateTimeOffset lastestPubDate = SettingsManager.GetLastestPubDate(website);
+            DateTimeOffset lastestPubDate = SettingsManager.GetLastestPubDate(websiteUrl);
+            DateTimeOffset newLatestPubDate = DateTimeOffset.MinValue;
 
             // Wait until the event is set by another thread.
             addEvent.WaitOne();
@@ -86,28 +87,31 @@ namespace QuestionsBackgroundTasks
                     {
                         Debug.WriteLine("{0} > {1}", item.PublishedDate.DateTime, lastestPubDate);
 
-                        if (AddQuestion(website, item))
+                        if (AddQuestion(websiteUrl, item))
                         {
                             questionsChanged = true;
 
-                            if (item.PublishedDate > lastestPubDate)
+                            if (item.PublishedDate > newLatestPubDate)
                             {
-                                lastestPubDate = item.PublishedDate;
-                                Debug.WriteLine("New {0} LastestPubDate: {1}", website, lastestPubDate);
+                                newLatestPubDate = item.PublishedDate;
+                                Debug.WriteLine("New {0} LastestPubDate: {1}", websiteUrl, newLatestPubDate);
                             }
                         }
                     }
                     else
                     {
-                        if (UpdateQuestion(website, item))
+                        if (UpdateQuestion(websiteUrl, item))
                         {
                             questionsChanged = true;
                         }
                     }
                 }
 
-
-                SettingsManager.SetLastestPubDate(website, lastestPubDate);
+                // If the quesiton list did not change, there should not be a new LatestPubDate.
+                if (questionsChanged)
+                {
+                    SettingsManager.SetLastestPubDate(websiteUrl, lastestPubDate);
+                }
 
                 return questionsChanged;
             }
@@ -239,12 +243,37 @@ namespace QuestionsBackgroundTasks
             return false;
         }
 
-        public static void ClearQuestions()
+        public static void RemoveQuestions(string websiteUrl, string tag)
         {
-            // TODO: Each question removed should be added to the "read questions list".
+            List<string> keysToDelete = new List<string>();
 
-            // Replace the collection with an empty object.
-            questionsCollection.Clear();
+            foreach (var keyValuePair in questionsCollection)
+            {
+                BindableQuestion tempQuestion = new BindableQuestion(
+                    keyValuePair.Key,
+                    keyValuePair.Value.GetObject());
+
+                // Is it the selected website?
+                // A null websiteUrl matches all questions.
+                if (websiteUrl == null || tempQuestion.WebsiteUrl == websiteUrl)
+                {
+                    // Is it the selected tag?
+                    // A null tag matches any tag.
+                    if (tag == null || tempQuestion.Categories.ContainsKey(tag))
+                    {
+                        keysToDelete.Add(keyValuePair.Key);
+                    }
+                }
+            }
+
+            // Remove questions.
+            foreach (string key in keysToDelete)
+            {
+                questionsCollection.Remove(key);
+
+
+                // TODO: Each question removed should be added to the "read questions list".
+            }
         }
 
         public static void DisplayQuestions(ListView listView, IList<BindableQuestion> list)
@@ -285,39 +314,9 @@ namespace QuestionsBackgroundTasks
             }
         }
 
-        public static IAsyncAction MoveFileFromLocalToRoaming()
+        public static void RemoveQuestionsInTheReadList()
         {
-            return AsyncInfo.Run(async (cancellationToken) =>
-            {
-                // Look in both folders.
-                bool localExists = await FilesManager.FileExistsAsync(ApplicationData.Current.LocalFolder, settingsFileName);
-                bool roamingExists = await FilesManager.FileExistsAsync(ApplicationData.Current.RoamingFolder, settingsFileName);
-
-                if (localExists && !roamingExists)
-                {
-                    // File only in local folder. Move it to roaming folder.
-                    await FilesManager.MoveAsync(
-                        ApplicationData.Current.LocalFolder,
-                        ApplicationData.Current.RoamingFolder,
-                        settingsFileName);
-
-                    Debug.WriteLine("File moved: {0}", settingsFileName);
-                    return;
-                }
-
-                if (localExists && roamingExists)
-                {
-                    // File in both folders. Remove local version. Roaming version must come from a device
-                    // with a more recent version of the app.
-                    await FilesManager.DeleteAsync(ApplicationData.Current.LocalFolder, settingsFileName);
-
-                    Debug.WriteLine("Duplicated file removed: {0}", settingsFileName);
-                    return;
-                }
-
-                // Anything else means we have the configuration desired, or it is a new app.
-                Debug.WriteLine("Desired situation: {0}", settingsFileName);
-            });
+            // TODO: Implement.
         }
     }
 }

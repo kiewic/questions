@@ -12,12 +12,12 @@ namespace QuestionsBackgroundTasks
     public sealed class BindableWebsite
     {
         string id;
-        PowerpuffJsonObject json;
+        PowerpuffJsonObject roamingJson;
 
-        public BindableWebsite(string id, JsonObject jsonObject)
+        public BindableWebsite(string id, JsonObject roamingJsonObject)
         {
             this.id = id;
-            json = new PowerpuffJsonObject(jsonObject);
+            roamingJson = new PowerpuffJsonObject(roamingJsonObject);
         }
 
         public override string ToString()
@@ -27,7 +27,7 @@ namespace QuestionsBackgroundTasks
 
         public void AddTagAndSave(ListView listView, string tag)
         {
-            JsonObject tagsCollection = json.GetNamedObject("Tags");
+            JsonObject tagsCollection = roamingJson.GetNamedObject("Tags");
 
             if (tagsCollection.ContainsKey(tag))
             {
@@ -45,20 +45,22 @@ namespace QuestionsBackgroundTasks
 
         public void DeleteTagAndSave(ListView listView, string tag)
         {
-            JsonObject tagsCollection = json.GetNamedObject("Tags");
+            JsonObject tagsCollection = roamingJson.GetNamedObject("Tags");
 
             tagsCollection.Remove(tag);
             listView.Items.Remove(tag);
 
-            // TODO: Remove only questions containing this tag.
-            QuestionsManager.ClearQuestions();
+            // Remove only questions containing this website and this tag. Then save, do not wait
+            // until save is completed.
+            QuestionsManager.RemoveQuestions(id, tag);
+            var saveOperation = QuestionsManager.SaveAsync();
 
             SettingsManager.Save();
         }
 
         public void DisplayTags(ListView listView)
         {
-            JsonObject tagsCollection = json.GetNamedObject("Tags");
+            JsonObject tagsCollection = roamingJson.GetNamedObject("Tags");
 
             foreach (string tag in tagsCollection.Keys)
             {
@@ -70,7 +72,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return json.GetNamedString("ApiSiteParameter");
+                return roamingJson.GetNamedString("ApiSiteParameter");
             }
         }
 
@@ -78,7 +80,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return json.GetNamedString("Name");
+                return roamingJson.GetNamedString("Name");
             }
         }
 
@@ -86,7 +88,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                string iconUrl = json.GetNamedString("IconUrl");
+                string iconUrl = roamingJson.GetNamedString("IconUrl");
                 return iconUrl;
             }
         }
@@ -95,7 +97,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return json.GetNamedString("FaviconUrl");
+                return roamingJson.GetNamedString("FaviconUrl");
             }
         }
 
@@ -103,7 +105,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return json.ConcatenateNamedObjectKeys("Tags");
+                return roamingJson.ConcatenateNamedObjectKeys("Tags");
             }
         }
     }
