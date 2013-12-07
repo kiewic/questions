@@ -17,9 +17,9 @@ namespace QuestionsBackgroundTasks
         private static SyndicationClient client = new SyndicationClient();
 
         // 1. Load settings.
-        // 2. query -> Retrieve feed.
-        // 3. skipLastAllRead -> Add questions.
-        // 4. Sort Questions (for tile and badge).
+        // 2. query -> Retrieve feeds.
+        // 3. skipLatestPubDate -> Add questions.
+        // 4. Sort questions (needed to show tile and badge).
         // 5. Update tile.
         // 6. Update badge.
         // TODO: Maybe check for buzz words here.
@@ -68,13 +68,17 @@ namespace QuestionsBackgroundTasks
                 {
                     Debug.WriteLine("Questions list did not change.");
                 }
+
+                // Update last query date/time.
+                // TODO: Only modify date/time if all queries were successful.
+                SettingsManager.LatestQueryDate = DateTimeOffset.Now;
             });
         }
 
         public static IAsyncOperation<QuerySingleWebsiteResult> QuerySingleWebsiteAsync(
             string website,
             string query,
-            bool skipLastAllRead)
+            bool skipLatestPubDate)
         {
             return AsyncInfo.Run(async (cancellationToken) =>
             {
@@ -126,7 +130,7 @@ namespace QuestionsBackgroundTasks
                     }
                 }
 
-                if (QuestionsManager.AddQuestions(website, feed, skipLastAllRead))
+                if (QuestionsManager.AddQuestions(website, feed, skipLatestPubDate))
                 {
                     result.Changed = true;
                 }

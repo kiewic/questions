@@ -303,18 +303,13 @@ namespace Questions
 
         private async void MarkAllReadButton_Click(object sender, RoutedEventArgs e)
         {
-            IList<BindableQuestion> list = QuestionsManager.GetSortedQuestions();
-            if (list.Count == 0)
+            if (QuestionsView.Items.Count == 0)
             {
                 // There are no question, there is nothing to do.
                 return;
             }
 
-            // The first question is the most recent.
-            DateTimeOffset newLastAllRead = list[0].PubDate;
-            SettingsManager.LastAllRead = newLastAllRead;
-
-            // Clear questions in the frontend and in the bsckend.
+            // Clear questions in the frontend and in the backend.
             QuestionsManager.ClearQuestions();
             QuestionsView.ItemsSource = null;
 

@@ -18,26 +18,28 @@ namespace QuestionsBackgroundTasks
 {
     public sealed class SettingsManager
     {
+        private const string LatestPubDateKey = "LatestPubDate";
+        private const string LatestQueryDateKey = "LatestQueryDate";
         private static JsonObject websitesCollection;
         private static IPropertySet roamingValues;
         private static IPropertySet localValues;
 
-        public static DateTimeOffset LastAllRead
+        public static DateTimeOffset LatestQueryDate
         {
             get
             {
                 CheckSettingsAreLoaded();
 
-                if (roamingValues.ContainsKey("LastAllRead"))
+                if (localValues.ContainsKey(LatestQueryDateKey))
                 {
-                    return DateTimeOffset.Parse(roamingValues["LastAllRead"].ToString());
+                    return DateTimeOffset.Parse(localValues[LatestQueryDateKey].ToString());
                 }
 
                 return DateTime.MinValue;
             }
             set
             {
-                roamingValues["LastAllRead"] = value.ToString();
+                localValues[LatestQueryDateKey] = value.ToString();
             }
         }
 
@@ -207,6 +209,31 @@ namespace QuestionsBackgroundTasks
                 builder.Append(WebUtility.UrlEncode(tag));
             }
             return builder.ToString();
+        }
+
+        public static DateTimeOffset GetLastestPubDate(string website)
+        {
+            CheckSettingsAreLoaded();
+
+            JsonObject websiteObject = websitesCollection.GetNamedObject(website);
+
+            if (websiteObject.ContainsKey(LatestPubDateKey))
+            {
+                string lastestPubDateString = websiteObject.GetNamedString(LatestPubDateKey);
+                return DateTimeOffset.Parse(lastestPubDateString);
+            }
+
+            return DateTimeOffset.MinValue;
+        }
+
+        public static void SetLastestPubDate(string website, DateTimeOffset lastestPubDate)
+        {
+            CheckSettingsAreLoaded();
+
+            JsonObject websiteObject = websitesCollection.GetNamedObject(website);
+
+            string lastestPubDateString = lastestPubDate.ToString();
+            websiteObject.SetNamedValue(LatestPubDateKey, JsonValue.CreateStringValue(lastestPubDateString));
         }
 
         public static bool TryCreateUri(string website, string query, out Uri uri)

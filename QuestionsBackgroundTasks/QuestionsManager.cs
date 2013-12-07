@@ -67,9 +67,11 @@ namespace QuestionsBackgroundTasks
         }
 
         // This method can be call simultaneously. Make sure only one thread is touching it.
-        public static bool AddQuestions(string website, SyndicationFeed feed, bool skipLastAllRead)
+        public static bool AddQuestions(string website, SyndicationFeed feed, bool skipLatestPubDate)
         {
             bool questionsChanged = false;
+
+            DateTimeOffset lastestPubDate = SettingsManager.GetLastestPubDate(website);
 
             // Wait until the event is set by another thread.
             addEvent.WaitOne();
@@ -78,18 +80,34 @@ namespace QuestionsBackgroundTasks
             {
                 CheckSettingsAreLoaded();
 
-                DateTimeOffset lastAllRead = SettingsManager.LastAllRead;
-
                 foreach (SyndicationItem item in feed.Items)
                 {
-                    if (skipLastAllRead || DateTimeOffset.Compare(item.PublishedDate.DateTime, lastAllRead) > 0)
+                    if (skipLatestPubDate || DateTimeOffset.Compare(item.PublishedDate.DateTime, lastestPubDate) > 0)
                     {
+                        Debug.WriteLine("{0} > {1}", item.PublishedDate.DateTime, lastestPubDate);
+
                         if (AddQuestion(website, item))
+                        {
+                            questionsChanged = true;
+
+                            if (item.PublishedDate > lastestPubDate)
+                            {
+                                lastestPubDate = item.PublishedDate;
+                                Debug.WriteLine("New {0} LastestPubDate: {1}", website, lastestPubDate);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (UpdateQuestion(website, item))
                         {
                             questionsChanged = true;
                         }
                     }
                 }
+
+
+                SettingsManager.SetLastestPubDate(website, lastestPubDate);
 
                 return questionsChanged;
             }
@@ -128,12 +146,16 @@ namespace QuestionsBackgroundTasks
 
             Debug.WriteLine("Questions count after limit: {0}", questionsCollection.Count);
 
+            // TODO: Get the newest question, and store the PubDate, so older questions aren't added to the list again.
+
             await SaveAsync();
         }
 
         // NOTE: Adding a single question does not load or save settings. Good for performance.
         private static bool AddQuestion(string website, SyndicationItem item)
         {
+            // If the latestPubDate validation was skipped, it could happend that que query returns
+            // questions we already have.
             if (questionsCollection.ContainsKey(item.Id))
             {
                 return UpdateQuestion(website, item);
@@ -158,10 +180,29 @@ namespace QuestionsBackgroundTasks
             {
                 categoriesCollection.Add(category.Term, nullValue);
             }
-            Debug.WriteLine("Categories: {0}", categoriesCollection.Stringify());
             questionObject.Add("Categories", categoriesCollection);
 
-            questionsCollection.Add(item.Id, questionObject);
+            // TODO: Remove this try, it is only for debug purposes.
+            try
+            {
+                questionsCollection.Add(item.Id, questionObject);
+            }
+            catch (Exception)
+            {
+                JsonObject originalItem = questionsCollection.GetNamedObject(item.Id);
+                string originalTitle = originalItem.GetNamedString("Title");
+                string originalPubDate = originalItem.GetNamedString("PubDate");
+                Debug.WriteLine(
+                    "Question: {0} \r\nCurrent:  {1} {2} - {3}\r\nOriginal: {4} {5} - {6}", 
+                    item.Id,
+                    item.Title.Text,
+                    item.PublishedDate,
+                    item.PublishedDate.ToUniversalTime(),
+                    originalTitle,
+                    DateTimeOffset.Parse(originalPubDate),
+                    DateTimeOffset.Parse( originalPubDate).ToUniversalTime());
+                throw;
+            }
 
             Debug.WriteLine("New question: {0}", item.Id);
             return true;
@@ -177,6 +218,12 @@ namespace QuestionsBackgroundTasks
 
         private static bool UpdateQuestion(string website, SyndicationItem item)
         {
+            if (!questionsCollection.ContainsKey(item.Id))
+            {
+                Debug.WriteLine("Question skipped: {0}", item.Id);
+                return false;
+            }
+
             JsonObject questionObject = questionsCollection.GetNamedObject(item.Id);
 
             string oldTitle = questionObject.GetNamedString("Title");
@@ -188,11 +235,14 @@ namespace QuestionsBackgroundTasks
                 return true;
             }
 
+            Debug.WriteLine("Question up to date: {0}", item.Id);
             return false;
         }
 
         public static void ClearQuestions()
         {
+            // TODO: Each question removed should be added to the "read questions list".
+
             // Replace the collection with an empty object.
             questionsCollection.Clear();
         }

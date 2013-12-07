@@ -76,7 +76,7 @@ namespace Questions
 
             await QuestionsManager.LoadAsync();
 
-            // Retrieve questions, skip the LastAllRead feature and save questions.
+            // Retrieve questions, skip the LatestPubDate validation and save all questions.
             QuerySingleWebsiteResult result = await FeedManager.QuerySingleWebsiteAsync(website.ToString(), tagEncoded, true);
             QuestionsManager.LimitTo150AndSave();
 
