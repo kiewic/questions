@@ -71,7 +71,7 @@ namespace QuestionsBackgroundTasks
         {
             bool questionsChanged = false;
 
-            DateTimeOffset lastestPubDate = SettingsManager.GetLastestPubDate(websiteUrl);
+            DateTimeOffset latestPubDate = SettingsManager.GetLastestPubDate(websiteUrl);
             DateTimeOffset newLatestPubDate = DateTimeOffset.MinValue;
 
             // Wait until the event is set by another thread.
@@ -83,9 +83,9 @@ namespace QuestionsBackgroundTasks
 
                 foreach (SyndicationItem item in feed.Items)
                 {
-                    if (skipLatestPubDate || DateTimeOffset.Compare(item.PublishedDate.DateTime, lastestPubDate) > 0)
+                    if (skipLatestPubDate || DateTimeOffset.Compare(item.PublishedDate.DateTime, latestPubDate) > 0)
                     {
-                        Debug.WriteLine("{0} > {1}", item.PublishedDate.DateTime, lastestPubDate);
+                        Debug.WriteLine("{0} > {1}", item.PublishedDate.DateTime, latestPubDate);
 
                         if (AddQuestion(websiteUrl, item))
                         {
@@ -110,7 +110,7 @@ namespace QuestionsBackgroundTasks
                 // If the quesiton list did not change, there should not be a new LatestPubDate.
                 if (questionsChanged)
                 {
-                    SettingsManager.SetLastestPubDate(websiteUrl, lastestPubDate);
+                    SettingsManager.SetLastestPubDate(websiteUrl, newLatestPubDate);
                 }
 
                 return questionsChanged;
@@ -186,27 +186,7 @@ namespace QuestionsBackgroundTasks
             }
             questionObject.Add("Categories", categoriesCollection);
 
-            // TODO: Remove this try, it is only for debug purposes.
-            try
-            {
-                questionsCollection.Add(item.Id, questionObject);
-            }
-            catch (Exception)
-            {
-                JsonObject originalItem = questionsCollection.GetNamedObject(item.Id);
-                string originalTitle = originalItem.GetNamedString("Title");
-                string originalPubDate = originalItem.GetNamedString("PubDate");
-                Debug.WriteLine(
-                    "Question: {0} \r\nCurrent:  {1} {2} - {3}\r\nOriginal: {4} {5} - {6}", 
-                    item.Id,
-                    item.Title.Text,
-                    item.PublishedDate,
-                    item.PublishedDate.ToUniversalTime(),
-                    originalTitle,
-                    DateTimeOffset.Parse(originalPubDate),
-                    DateTimeOffset.Parse( originalPubDate).ToUniversalTime());
-                throw;
-            }
+            questionsCollection.Add(item.Id, questionObject);
 
             Debug.WriteLine("New question: {0}", item.Id);
             return true;
@@ -217,6 +197,9 @@ namespace QuestionsBackgroundTasks
             if (questionsCollection.ContainsKey(id))
             {
                 questionsCollection.Remove(id);
+
+                string readDateString = DateTimeOffset.Now.ToString();
+                SettingsManager.AddToReadList(id, readDateString);
             }
         }
 
@@ -243,8 +226,9 @@ namespace QuestionsBackgroundTasks
             return false;
         }
 
-        public static void RemoveQuestions(string websiteUrl, string tag)
+        public static void RemoveQuestionsAndSave(string websiteUrl, string tag)
         {
+            string readDateString = DateTimeOffset.Now.ToString();
             List<string> keysToDelete = new List<string>();
 
             foreach (var keyValuePair in questionsCollection)
@@ -270,10 +254,13 @@ namespace QuestionsBackgroundTasks
             foreach (string key in keysToDelete)
             {
                 questionsCollection.Remove(key);
-
-
-                // TODO: Each question removed should be added to the "read questions list".
+                SettingsManager.AddToReadList(key, readDateString);
             }
+
+            SettingsManager.Save();
+
+            // Do not wait until settings save is completed.
+            var saveOperation = QuestionsManager.SaveAsync();
         }
 
         public static void DisplayQuestions(ListView listView, IList<BindableQuestion> list)
@@ -316,7 +303,25 @@ namespace QuestionsBackgroundTasks
 
         public static void RemoveQuestionsInTheReadList()
         {
-            // TODO: Implement.
+            CheckSettingsAreLoaded();
+
+            JsonObject readList = SettingsManager.GetReadList();
+
+            // Search for questions in the read list.
+            List<string> keysToDelete = new List<string>();
+            foreach (string key in questionsCollection.Keys)
+            {
+                if (readList.ContainsKey(key))
+                {
+                    keysToDelete.Add(key);
+                }
+            }
+
+            // Remove questions that are in both lists.
+            foreach (string key in keysToDelete)
+            {
+                questionsCollection.Remove(key);
+            }
         }
     }
 }

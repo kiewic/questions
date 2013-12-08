@@ -50,10 +50,8 @@ namespace QuestionsBackgroundTasks
             tagsCollection.Remove(tag);
             listView.Items.Remove(tag);
 
-            // Remove only questions containing this website and this tag. Then save, do not wait
-            // until save is completed.
-            QuestionsManager.RemoveQuestions(id, tag);
-            var saveOperation = QuestionsManager.SaveAsync();
+            // Remove only questions containing this website and this tag.
+            QuestionsManager.RemoveQuestionsAndSave(id, tag);
 
             SettingsManager.Save();
         }

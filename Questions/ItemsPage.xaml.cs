@@ -306,7 +306,7 @@ namespace Questions
             }
         }
 
-        private async void MarkAllReadButton_Click(object sender, RoutedEventArgs e)
+        private void MarkAllReadButton_Click(object sender, RoutedEventArgs e)
         {
             if (QuestionsView.Items.Count == 0)
             {
@@ -316,9 +316,7 @@ namespace Questions
 
             // Clear questions in the frontend and in the backend.
             QuestionsView.ItemsSource = null;
-            QuestionsManager.RemoveQuestions(null, null);
-
-            await QuestionsManager.SaveAsync();
+            QuestionsManager.RemoveQuestionsAndSave(null, null);
 
             FeedManager.ClearTileAndBadge();
 

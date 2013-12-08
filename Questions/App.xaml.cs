@@ -44,7 +44,7 @@ namespace Questions
         /// search results, and so forth.
         /// </summary>
         /// <param name="args">Details about the launch request and process.</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs args)
+        protected override async void OnLaunched(LaunchActivatedEventArgs args)
         {
             Frame rootFrame = Window.Current.Content as Frame;
 
@@ -70,8 +70,10 @@ namespace Questions
                 // configuring the new page by passing required information as a navigation
                 // parameter
 
-                // Maybe we received an unpdated "read list" whhile the app was not running. Make sure
+                // Maybe we received an unpdated "read list" while the app was not running. Make sure
                 // to remove the questions that are listed in the "read list".
+                SettingsManager.Load();
+                await QuestionsManager.LoadAsync();
                 QuestionsManager.RemoveQuestionsInTheReadList();
 
                 bool isNewApp = SettingsManager.IsEmpty();

@@ -99,6 +99,7 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="BindableReadQuestion.cs" />
     <Compile Include="BindableWebsite.cs" />
     <Compile Include="PowerpuffJsonObject.cs" />
     <Compile Include="BindableTagOption.cs" />
