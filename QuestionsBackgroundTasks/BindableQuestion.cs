@@ -67,21 +67,37 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
+                const double daysPerMonth = 30.43;
+                const double daysPerYear = 365.25;
                 TimeSpan diff = DateTime.Now - PubDate;
                 if (diff.TotalSeconds < 60)
                 {
-                    return (int)diff.TotalSeconds + " seconds ago";
+                    int seconds = (int)diff.TotalSeconds;
+                    return String.Format("{0} {1} ago", seconds, seconds == 1 ? "second" : "seconds");
                 }
                 else if (diff.TotalMinutes < 60)
                 {
-                    return (int)diff.TotalMinutes + " minutes ago";
+                    int minutes = (int)diff.TotalMinutes;
+                    return String.Format("{0} {1} ago", minutes, minutes == 1 ? "minute" : "minutes");
                 }
                 else if (diff.TotalHours < 24)
                 {
-                    return (int)diff.TotalHours + " hours ago";
+                    int hours = (int)diff.TotalHours;
+                    return String.Format("{0} {1} ago", hours, hours == 1 ? "hour" : "hours");
+                }
+                else if (diff.TotalDays < daysPerMonth)
+                {
+                    int days = (int)diff.TotalDays;
+                    return String.Format("{0} {1} ago", days, days == 1 ? "day" : "days");
+                }
+                else if (diff.TotalDays < daysPerYear)
+                {
+                    int months = (int)(diff.TotalDays / daysPerMonth);
+                    return String.Format("{0} {1} ago", months, months == 1 ? "month" : "months");
                 }
 
-                return (int)diff.TotalDays + " days ago";
+                int years = (int)(diff.TotalDays / daysPerYear);
+                return String.Format("{0} {1} ago", years, years == 1 ? "year" : "years");
             }
         }
 
