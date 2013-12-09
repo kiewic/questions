@@ -74,7 +74,7 @@ namespace Questions
                 // to remove the questions that are listed in the "read list".
                 SettingsManager.Load();
                 await QuestionsManager.LoadAsync();
-                QuestionsManager.RemoveQuestionsInTheReadList();
+                QuestionsManager.RemoveQuestionsInReadListAndSave();
 
                 bool isNewApp = SettingsManager.IsEmpty();
                 Type initialPage = typeof(ItemsPage);
@@ -128,7 +128,7 @@ namespace Questions
             StorageFile file = await openPicker.PickSingleFileAsync();
             if (file != null)
             {
-                SettingsManager.Import(file);
+                SettingsManager.ImportAndSave(file);
             }
         }
 

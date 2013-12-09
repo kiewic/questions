@@ -177,6 +177,12 @@ namespace Questions
         {
             string message = sender.Name + " completed on " + DateTime.Now;
             string title = "Task Completed";
+
+            // When a task completed, unload questions is required, so they get loaded from the file.
+            // It seems that the background task and the app process do not share the same QuestionsManager
+            // static vars.
+            QuestionsManager.Unload();
+
             HandleTaskCompletedOrDataChanged(message, title);
         }
 
@@ -188,6 +194,9 @@ namespace Questions
             // When data changes. Settings should be unloaded/loaded so websites get synchronized.
             SettingsManager.Unload();
             SettingsManager.Load();
+
+            // When data changes, the read-list may contain new read-questions.
+            QuestionsManager.RemoveQuestionsInReadListAndSave();
 
             HandleTaskCompletedOrDataChanged(message, title);
         }
@@ -215,14 +224,7 @@ namespace Questions
             }
             #endif
 
-            // When task completed, unload is required, so the questions get loaded from the file.
-            // It seems that the background trask and the app process do not share the same QuestionManager
-            // static vars.
-            // When data changed, unload is required, so the questions get loaded from the file
-            // incase the questions file had came from another device.
-            QuestionsManager.Unload();
-
-            // Do not force a query when task completed. This handler is called just after the background task
+            // Do not force a query when a task completed. This handler is called just after the background task
             // made a query.
             // Do not force a query when data changed. This handler is called when settings/questions in another device
             // change. Simply display the latest list of questions.
@@ -325,12 +327,14 @@ namespace Questions
 
         private void MarkReadButton_Click(object sender, RoutedEventArgs e)
         {
+            List<string> keysToDelete = new List<string>();
+
             foreach (BindableQuestion question in QuestionsView.SelectedItems)
             {
-                QuestionsManager.RemoveQuestion(question.Id);
+                keysToDelete.Add(question.Id);
             }
 
-            var saveOperation = QuestionsManager.SaveAsync();
+            QuestionsManager.RemoveQuestionsAndSave(keysToDelete);
 
             // Do not force a query. We are just removing some questions,
             // the list may have more questions.

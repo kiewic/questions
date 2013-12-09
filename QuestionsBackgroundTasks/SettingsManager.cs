@@ -133,10 +133,25 @@ namespace QuestionsBackgroundTasks
             SyncWebsites();
         }
 
-        public static void Save()
+        // What is in roaming settings?
+        //
+        // * List of websites
+        // * Tags, Name, ApiSiteParameter, IconUrl and FaviconUrl per website.
+        // * The readList.
+        //
+        public static void SaveRoaming()
         {
             roamingValues[ReadListKey] = readList.Stringify();
             roamingValues[WebsitesKey] = roamingWebsites.Stringify();
+        }
+
+        // What is in local settings?
+        //
+        // * List of websites
+        // * LastestPubDate per website.
+        //
+        public static void SaveLocal()
+        {
             localValues[WebsitesKey] = localWebsites.Stringify();
         }
 
@@ -169,7 +184,8 @@ namespace QuestionsBackgroundTasks
                     JsonObject localWebsiteObject = new JsonObject();
                     localWebsites.SetNamedValue(websiteSiteUrl, localWebsiteObject);
 
-                    Save();
+                    SaveRoaming();
+                    SaveLocal();
                 }
                 else
                 {
@@ -196,7 +212,8 @@ namespace QuestionsBackgroundTasks
             // Remove only questions containing this website.
             QuestionsManager.RemoveQuestionsAndSave(websiteUrl, null);
 
-            Save();
+            SaveRoaming();
+            SaveLocal();
         }
 
         internal static IEnumerable<string> GetWebsiteKeys()
@@ -315,7 +332,7 @@ namespace QuestionsBackgroundTasks
             await FileIO.WriteTextAsync(file, jsonString);
         }
 
-        public static async void Import(StorageFile file)
+        public static async void ImportAndSave(StorageFile file)
         {
             CheckSettingsAreLoaded();
 
@@ -347,6 +364,13 @@ namespace QuestionsBackgroundTasks
                     Import(localValues, jsonValue.GetObject());
                 }
             }
+
+            // Any value may be missing from the settings file, make sure all
+            // values are initialized and websites are parsed.
+            InitializeSettings();
+
+            SaveLocal();
+            SaveRoaming();
         }
 
         private static JsonObject Export(IPropertySet values)
@@ -413,10 +437,6 @@ namespace QuestionsBackgroundTasks
                         throw new Exception("Not supported JsonValueType.");
                 }
             }
-
-            // Any value may be missing from the settings file, make sure all
-            // values are initialized and websites are parsed.
-            InitializeSettings();
         }
 
         public static void SyncWebsites()
@@ -430,12 +450,17 @@ namespace QuestionsBackgroundTasks
             }
 
             // Remove from local websites not in roaming.
+            List<string> keysToRemove = new List<string>();
             foreach (string website in localWebsites.Keys)
             {
                 if (!roamingWebsites.ContainsKey(website))
                 {
-                    localWebsites.Remove(website);
+                    keysToRemove.Add(website);
                 }
+            }
+            foreach (string key in keysToRemove)
+            {
+                localWebsites.Remove(key);
             }
 
             // Add websites from roaming into local.
@@ -464,7 +489,7 @@ namespace QuestionsBackgroundTasks
             return readList;
         }
 
-        public static void LimitReadListTo300AndSave()
+        public static void LimitReadListTo300()
         {
             const int limit = 300;
 
@@ -504,8 +529,6 @@ namespace QuestionsBackgroundTasks
             readList = newReadList;
 
             Debug.WriteLine("Read questions after limit: {0}", readList.Count);
-
-            Save();
         }
     }
 }

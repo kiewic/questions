@@ -62,7 +62,7 @@ namespace QuestionsBackgroundTasks
                 {
                     Debug.WriteLine("Questions list changed.");
                     QuestionsManager.LimitTo150AndSave();
-                    SettingsManager.Save(); // Save updated latestPubDate.
+                    SettingsManager.SaveLocal(); // Save updated latestPubDate.
                     UpdateTileAndBadge();
                 }
                 else

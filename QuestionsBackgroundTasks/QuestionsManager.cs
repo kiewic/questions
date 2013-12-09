@@ -192,14 +192,16 @@ namespace QuestionsBackgroundTasks
             return true;
         }
 
-        public static void RemoveQuestion(string id)
+        public static void RemoveQuestion(string id, string readDateString)
         {
-            if (questionsCollection.ContainsKey(id))
+            // Remove from questions-list and add to read-questions-list.
+            if (questionsCollection.Remove(id))
             {
-                questionsCollection.Remove(id);
-
-                string readDateString = DateTimeOffset.Now.ToString();
                 SettingsManager.AddToReadList(id, readDateString);
+            }
+            else
+            {
+                Debug.Assert(false, "Removing a question that was not in the questions-list.");
             }
         }
 
@@ -228,7 +230,6 @@ namespace QuestionsBackgroundTasks
 
         public static void RemoveQuestionsAndSave(string websiteUrl, string tag)
         {
-            string readDateString = DateTimeOffset.Now.ToString();
             List<string> keysToDelete = new List<string>();
 
             foreach (var keyValuePair in questionsCollection)
@@ -250,17 +251,28 @@ namespace QuestionsBackgroundTasks
                 }
             }
 
+            RemoveQuestionsAndSave(keysToDelete);
+        }
+
+        public static void RemoveQuestionsAndSave(IList<string> keysToDelete)
+        {
+            string readDateString = DateTimeOffset.Now.ToString();
+
             // Remove questions.
             foreach (string key in keysToDelete)
             {
-                questionsCollection.Remove(key);
-                SettingsManager.AddToReadList(key, readDateString);
+                RemoveQuestion(key, readDateString);
             }
 
-            SettingsManager.Save();
+            // Only save if at least one question was deleted.
+            if (keysToDelete.Count > 0)
+            {
+                SettingsManager.LimitReadListTo300();
+                SettingsManager.SaveRoaming();
 
-            // Do not wait until settings save is completed.
-            var saveOperation = QuestionsManager.SaveAsync();
+                // Do not wait until questions-save is completed.
+                var saveOperation = QuestionsManager.SaveAsync();
+            }
         }
 
         public static void DisplayQuestions(ListView listView, IList<BindableQuestion> list)
@@ -301,7 +313,7 @@ namespace QuestionsBackgroundTasks
             }
         }
 
-        public static void RemoveQuestionsInTheReadList()
+        public static void RemoveQuestionsInReadListAndSave()
         {
             CheckSettingsAreLoaded();
 
@@ -321,6 +333,13 @@ namespace QuestionsBackgroundTasks
             foreach (string key in keysToDelete)
             {
                 questionsCollection.Remove(key);
+            }
+
+            // Only save if at least one question was deleted.
+            if (keysToDelete.Count > 0)
+            {
+                // Do not wait until questions-save is completed.
+                var saveOperation = QuestionsManager.SaveAsync();
             }
         }
     }

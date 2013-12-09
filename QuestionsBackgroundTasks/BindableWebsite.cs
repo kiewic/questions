@@ -40,7 +40,7 @@ namespace QuestionsBackgroundTasks
             tagsCollection.Add(tag, nullValue);
             listView.Items.Add(tag);
 
-            SettingsManager.Save();
+            SettingsManager.SaveRoaming();
         }
 
         public void DeleteTagAndSave(ListView listView, string tag)
@@ -53,7 +53,7 @@ namespace QuestionsBackgroundTasks
             // Remove only questions containing this website and this tag.
             QuestionsManager.RemoveQuestionsAndSave(id, tag);
 
-            SettingsManager.Save();
+            SettingsManager.SaveRoaming();
         }
 
         public void DisplayTags(ListView listView)
