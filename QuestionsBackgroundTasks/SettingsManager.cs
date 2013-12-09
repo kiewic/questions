@@ -45,14 +45,6 @@ namespace QuestionsBackgroundTasks
             }
         }
 
-        public static string Version
-        {
-            get
-            {
-                return roamingValues["Version"].ToString();
-            }
-        }
-
         public static void Load()
         {
             if (roamingValues != null && localValues != null)
@@ -86,11 +78,6 @@ namespace QuestionsBackgroundTasks
 
         private static void InitializeOrValidateSettings()
         {
-            if (!roamingValues.ContainsKey("Version"))
-            {
-                roamingValues["Version"] = "3";
-            }
-
             if (!roamingValues.ContainsKey("UserId"))
             {
                 // Generate a random user id.
