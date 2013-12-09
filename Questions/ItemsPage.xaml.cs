@@ -186,7 +186,7 @@ namespace Questions
             HandleTaskCompletedOrDataChanged(message, title);
         }
 
-        private void DataChangedHandler(ApplicationData sender, object args)
+        private async void DataChangedHandler(ApplicationData sender, object args)
         {
             string message = "Application data " + sender.Version + " synchronized on " + DateTime.Now;
             string title = "Roaming Application Data Synchronized";
@@ -194,6 +194,10 @@ namespace Questions
             // When data changes. Settings should be unloaded/loaded so websites get synchronized.
             SettingsManager.Unload();
             SettingsManager.Load();
+
+            // Also unload and load read-list.
+            ReadListManager.Unload();
+            await ReadListManager.LoadAsync();
 
             // When data changes, the read-list may contain new read-questions.
             QuestionsManager.RemoveQuestionsInReadListAndSave();

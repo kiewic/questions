@@ -21,10 +21,8 @@ namespace QuestionsBackgroundTasks
         private const string LatestPubDateKey = "LatestPubDate";
         private const string LatestQueryDateKey = "LatestQueryDate";
         private const string WebsitesKey = "Websites";
-        private const string ReadListKey = "ReadList";
         private static JsonObject roamingWebsites;
         private static JsonObject localWebsites;
-        private static JsonObject readList;
         private static IPropertySet roamingValues;
         private static IPropertySet localValues;
 
@@ -74,7 +72,7 @@ namespace QuestionsBackgroundTasks
             Debug.WriteLine("Roaming settings folder: {0}", ApplicationData.Current.RoamingFolder.Path);
             Debug.WriteLine("Local settings folder: {0}", ApplicationData.Current.LocalFolder.Path);
 
-            InitializeSettings();
+            InitializeOrValidateSettings();
         }
 
         public static void Unload()
@@ -84,10 +82,9 @@ namespace QuestionsBackgroundTasks
 
             roamingWebsites = null;
             localWebsites = null;
-            readList = null;
         }
 
-        private static void InitializeSettings()
+        private static void InitializeOrValidateSettings()
         {
             if (!roamingValues.ContainsKey("Version"))
             {
@@ -100,35 +97,53 @@ namespace QuestionsBackgroundTasks
                 roamingValues["UserId"] = Guid.NewGuid().ToString();
             }
 
-            if (!roamingValues.ContainsKey(ReadListKey))
+            // Roaming websites.
+
+            roamingWebsites = null;
+            if (roamingValues.ContainsKey(WebsitesKey))
             {
-                JsonObject jsonObject = new JsonObject();
-                roamingValues[ReadListKey] = jsonObject.Stringify();
+                string jsonString = roamingValues[WebsitesKey].ToString();
+                if (!JsonObject.TryParse(jsonString, out roamingWebsites))
+                {
+                    roamingWebsites = null;
+                }
             }
 
-            if (!roamingValues.ContainsKey(WebsitesKey))
+            if (roamingWebsites == null)
             {
-                JsonObject jsonObject = new JsonObject();
-                roamingValues[WebsitesKey] = jsonObject.Stringify();
+                roamingWebsites = new JsonObject();
+                roamingValues[WebsitesKey] = roamingWebsites.Stringify();
             }
 
-            if (!localValues.ContainsKey(WebsitesKey))
+            if (roamingWebsites == null)
             {
-                JsonObject jsonObject = new JsonObject();
-                localValues[WebsitesKey] = jsonObject.Stringify();
+                // This should not be null.
+                Debugger.Break();
             }
 
-            // Parse list of read questions.
-            string jsonString = roamingValues[ReadListKey].ToString();
-            readList = JsonObject.Parse(jsonString);
+            // Local websites.
 
-            // Parse roaming websites.
-            jsonString = roamingValues[WebsitesKey].ToString();
-            roamingWebsites = JsonObject.Parse(jsonString);
+            localWebsites = null;
+            if (localValues.ContainsKey(WebsitesKey))
+            {
+                string jsonString = localValues[WebsitesKey].ToString();
+                if (!JsonObject.TryParse(jsonString, out localWebsites))
+                {
+                    localWebsites = null;
+                }
+            }
 
-            // Parse local websites.
-            jsonString = localValues[WebsitesKey].ToString();
-            localWebsites = JsonObject.Parse(jsonString);
+            if (localWebsites == null)
+            {
+                localWebsites = new JsonObject();
+                localValues[WebsitesKey] = localWebsites.Stringify();
+            }
+
+            if (localWebsites == null)
+            {
+                // This should not be null.
+                Debugger.Break();
+            }
 
             SyncWebsites();
         }
@@ -137,11 +152,9 @@ namespace QuestionsBackgroundTasks
         //
         // * List of websites
         // * Tags, Name, ApiSiteParameter, IconUrl and FaviconUrl per website.
-        // * The readList.
         //
         public static void SaveRoaming()
         {
-            roamingValues[ReadListKey] = readList.Stringify();
             roamingValues[WebsitesKey] = roamingWebsites.Stringify();
         }
 
@@ -307,7 +320,7 @@ namespace QuestionsBackgroundTasks
 
         public static bool IsEmpty()
         {
-            Load();
+            CheckSettingsAreLoaded();
 
             return (roamingWebsites.Count == 0) ? true : false;
         }
@@ -367,7 +380,7 @@ namespace QuestionsBackgroundTasks
 
             // Any value may be missing from the settings file, make sure all
             // values are initialized and websites are parsed.
-            InitializeSettings();
+            InitializeOrValidateSettings();
 
             SaveLocal();
             SaveRoaming();
@@ -471,64 +484,6 @@ namespace QuestionsBackgroundTasks
                     localWebsites.Add(website, new JsonObject());
                 }
             }
-        }
-
-        internal static void AddToReadList(string questionId, string readDateString)
-        {
-            if (!readList.ContainsKey(questionId))
-            {
-                readList.Add(questionId, JsonValue.CreateStringValue(readDateString));
-            }
-        }
-
-
-        internal static JsonObject GetReadList()
-        {
-            CheckSettingsAreLoaded();
-
-            return readList;
-        }
-
-        public static void LimitReadListTo300()
-        {
-            const int limit = 300;
-
-            Debug.WriteLine("Read questions before limit: {0}", readList.Count);
-
-            if (readList.Count <= limit)
-            {
-                // There is nothing to do.
-                return;
-            }
-
-            // Put all read questions in a list.
-            List<BindableReadQuestion> list = new List<BindableReadQuestion>();
-            foreach (var keyValuePair in readList)
-            {
-                BindableReadQuestion readQuestion = new BindableReadQuestion(
-                    keyValuePair.Key,
-                    keyValuePair.Value.GetString());
-
-                list.Add(readQuestion);
-            }
-
-            // Sort read questions.
-            list.Sort((a, b) =>
-            {
-                // Multiply by -1 to sort in ascending order.
-                return DateTimeOffset.Compare(a.ReadDate, b.ReadDate) * -1;
-            });
-
-            // Remove surplus questions.
-            JsonObject newReadList = new JsonObject();
-            for (int i = 0; i < limit; i++)
-            {
-                string id = list[i].Id;
-                newReadList.Add(id, readList.GetNamedValue(id));
-            }
-            readList = newReadList;
-
-            Debug.WriteLine("Read questions after limit: {0}", readList.Count);
         }
     }
 }

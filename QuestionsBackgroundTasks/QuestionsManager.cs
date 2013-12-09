@@ -16,9 +16,10 @@ namespace QuestionsBackgroundTasks
 {
     public sealed class QuestionsManager
     {
+        private const string QuestionsKey = "Questions";
+        private const string FileName = "questions.json";
         private static AutoResetEvent addEvent = new AutoResetEvent(true);
         private static StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
-        private const string settingsFileName = "questions.json";
         private static JsonObject rootObject;
         private static JsonObject questionsCollection;
 
@@ -28,11 +29,11 @@ namespace QuestionsBackgroundTasks
             {
                 if (rootObject != null)
                 {
-                    // Settings already loaded, there is nothing to do.
+                    // File already loaded, there is nothing to do.
                     return;
                 }
 
-                string jsonString = await FilesManager.LoadAsync(storageFolder, settingsFileName);
+                string jsonString = await FilesManager.LoadAsync(storageFolder, FileName);
 
                 if (!JsonObject.TryParse(jsonString, out rootObject))
                 {
@@ -41,7 +42,13 @@ namespace QuestionsBackgroundTasks
                     return;
                 }
 
-                questionsCollection = rootObject.GetNamedObject("Questions");
+                if (!rootObject.ContainsKey(QuestionsKey))
+                {
+                    CreateFromScratch();
+                    return;
+                }
+
+                questionsCollection = rootObject.GetNamedObject(QuestionsKey);
             });
         }
 
@@ -52,10 +59,8 @@ namespace QuestionsBackgroundTasks
 
         public static IAsyncAction SaveAsync()
         {
-            return AsyncInfo.Run(async (cancellationToken) =>
-            {
-                await FilesManager.SaveAsync(storageFolder, settingsFileName, rootObject.Stringify());
-            });
+            Task saveTask = FilesManager.SaveAsync(storageFolder, FileName, rootObject.Stringify());
+            return saveTask.AsAsyncAction();
         }
 
         private static void CreateFromScratch()
@@ -63,7 +68,7 @@ namespace QuestionsBackgroundTasks
             rootObject = new JsonObject();
 
             questionsCollection = new JsonObject();
-            rootObject.Add("Questions", questionsCollection);
+            rootObject.Add(QuestionsKey, questionsCollection);
         }
 
         // This method can be call simultaneously. Make sure only one thread is touching it.
@@ -130,7 +135,6 @@ namespace QuestionsBackgroundTasks
             if (questionsCollection.Count > questionsLimit)
             {
                 JsonObject questionsCollectionCopy = new JsonObject();
-                int length = questionsCollection.Count;
                 int i = 0;
 
                 IList<BindableQuestion> list = GetSortedQuestions();
@@ -145,7 +149,7 @@ namespace QuestionsBackgroundTasks
                 }
 
                 questionsCollection = questionsCollectionCopy;
-                rootObject.SetNamedValue("Questions", questionsCollectionCopy);
+                rootObject.SetNamedValue(QuestionsKey, questionsCollectionCopy);
             }
 
             Debug.WriteLine("Questions count after limit: {0}", questionsCollection.Count);
@@ -190,19 +194,6 @@ namespace QuestionsBackgroundTasks
 
             Debug.WriteLine("New question: {0}", item.Id);
             return true;
-        }
-
-        public static void RemoveQuestion(string id, string readDateString)
-        {
-            // Remove from questions-list and add to read-questions-list.
-            if (questionsCollection.Remove(id))
-            {
-                SettingsManager.AddToReadList(id, readDateString);
-            }
-            else
-            {
-                Debug.Assert(false, "Removing a question that was not in the questions-list.");
-            }
         }
 
         private static bool UpdateQuestion(string website, SyndicationItem item)
@@ -256,19 +247,24 @@ namespace QuestionsBackgroundTasks
 
         public static void RemoveQuestionsAndSave(IList<string> keysToDelete)
         {
-            string readDateString = DateTimeOffset.Now.ToString();
-
-            // Remove questions.
+            // Remove from questions-list and add to read-questions-list.
             foreach (string key in keysToDelete)
             {
-                RemoveQuestion(key, readDateString);
+                if (questionsCollection.Remove(key))
+                {
+                    ReadListManager.AddReadQuestion(key);
+                }
+                else
+                {
+                    // Removing a question that was not in the questions-list.
+                    Debugger.Break();
+                }
             }
 
             // Only save if at least one question was deleted.
             if (keysToDelete.Count > 0)
             {
-                SettingsManager.LimitReadListTo300();
-                SettingsManager.SaveRoaming();
+                ReadListManager.LimitTo450AndSave();
 
                 // Do not wait until questions-save is completed.
                 var saveOperation = QuestionsManager.SaveAsync();
@@ -317,26 +313,24 @@ namespace QuestionsBackgroundTasks
         {
             CheckSettingsAreLoaded();
 
-            JsonObject readList = SettingsManager.GetReadList();
+            JsonArray readList = ReadListManager.GetReadList();
 
-            // Search for questions in the read list.
-            List<string> keysToDelete = new List<string>();
-            foreach (string key in questionsCollection.Keys)
+            // Search for read-list-questions in questions-list.
+            int removedQuestions = 0;
+            foreach (IJsonValue jsonValue in readList)
             {
-                if (readList.ContainsKey(key))
+                string id = jsonValue.GetString();
+                if (questionsCollection.ContainsKey(id))
                 {
-                    keysToDelete.Add(key);
+                    if (questionsCollection.Remove(id))
+                    {
+                        removedQuestions++;
+                    }
                 }
             }
 
-            // Remove questions that are in both lists.
-            foreach (string key in keysToDelete)
-            {
-                questionsCollection.Remove(key);
-            }
-
             // Only save if at least one question was deleted.
-            if (keysToDelete.Count > 0)
+            if (removedQuestions > 0)
             {
                 // Do not wait until questions-save is completed.
                 var saveOperation = QuestionsManager.SaveAsync();
