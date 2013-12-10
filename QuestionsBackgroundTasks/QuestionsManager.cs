@@ -268,6 +268,9 @@ namespace QuestionsBackgroundTasks
 
                 // Do not wait until questions-save is completed.
                 var saveOperation = QuestionsManager.SaveAsync();
+
+                // And refresh tile and badge.
+                FeedManager.UpdateTileAndBadge();
             }
         }
 
@@ -334,6 +337,9 @@ namespace QuestionsBackgroundTasks
             {
                 // Do not wait until questions-save is completed.
                 var saveOperation = QuestionsManager.SaveAsync();
+
+                // And refresh tile and badge.
+                FeedManager.UpdateTileAndBadge();
             }
         }
     }
