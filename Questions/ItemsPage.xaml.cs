@@ -144,8 +144,8 @@ namespace Questions
             builder.SetTrigger(new TimeTrigger(15, false));
             BackgroundTaskRegistration task = builder.Register();
 
-            taskCompletedHandler = new BackgroundTaskCompletedEventHandler(TaskCompletedHandler);
-            task.Completed += TaskCompletedHandler;
+            taskCompletedHandler = new BackgroundTaskCompletedEventHandler(OnTaskCompleted);
+            task.Completed += OnTaskCompleted;
         }
 
         private void UnregisterBackgroundTask()
@@ -164,7 +164,7 @@ namespace Questions
 
         private void RegisterDataChanged()
         {
-            dataChangedHandler = new TypedEventHandler<ApplicationData, object>(DataChangedHandler);
+            dataChangedHandler = new TypedEventHandler<ApplicationData, object>(OnDataChanged);
             ApplicationData.Current.DataChanged += dataChangedHandler;
         }
 
@@ -173,7 +173,7 @@ namespace Questions
             ApplicationData.Current.DataChanged -= dataChangedHandler;
         }
 
-        private void TaskCompletedHandler(BackgroundTaskRegistration sender, BackgroundTaskCompletedEventArgs args)
+        private void OnTaskCompleted(BackgroundTaskRegistration sender, BackgroundTaskCompletedEventArgs args)
         {
             string message = sender.Name + " completed on " + DateTime.Now;
             string title = "Task Completed";
@@ -186,7 +186,7 @@ namespace Questions
             HandleTaskCompletedOrDataChanged(message, title);
         }
 
-        private async void DataChangedHandler(ApplicationData sender, object args)
+        private async void OnDataChanged(ApplicationData sender, object args)
         {
             string message = "Application data " + sender.Version + " synchronized on " + DateTime.Now;
             string title = "Roaming Application Data Synchronized";
@@ -351,15 +351,6 @@ namespace Questions
             {
                 RefreshButton_Click(null, null);
                 e.Handled = true;
-            }
-            else if (e.Key == VirtualKey.C)
-            {
-                var ctrlState = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control);
-                if (ctrlState != CoreVirtualKeyStates.None)
-                {
-                    Frame.Navigate(typeof(EasterEggPage));
-                    e.Handled = true;
-                }
             }
         }
     }

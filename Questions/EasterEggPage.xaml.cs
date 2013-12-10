@@ -22,8 +22,6 @@ namespace Questions
 {
     public sealed partial class EasterEggPage : Page
     {
-        private KeyEventHandler keyUpHandler;
-
         private bool initialized = false;
 
         private double speedX;
@@ -58,27 +56,6 @@ namespace Questions
 
                 timer.Start();
             }
-
-            RegisterShortcuts();
-        }
-
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
-        {
-            base.OnNavigatedFrom(e);
-
-            UnregisterShortcuts();
-        }
-
-        private void RegisterShortcuts()
-        {
-            // I don't know why, but assign the hanlder to the page does not work. But this does.
-            keyUpHandler = new KeyEventHandler(Page_KeyUp);
-            Window.Current.Content.AddHandler(UIElement.KeyUpEvent, keyUpHandler, false);
-        }
-
-        private void UnregisterShortcuts()
-        {
-            Window.Current.Content.RemoveHandler(UIElement.KeyUpEvent, keyUpHandler);
         }
 
         private void OnTick(object sender, object e)
@@ -154,19 +131,6 @@ namespace Questions
             rectangle.Width = 15;
             rectangle.Height = 15;
             TheCanvas.Children.Add(rectangle);
-        }
-
-        private void Page_KeyUp(object sender, KeyRoutedEventArgs e)
-        {
-            if (e.Key == VirtualKey.V)
-            {
-                var ctrlState = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control);
-                if (ctrlState != CoreVirtualKeyStates.None)
-                {
-                    Frame.Navigate(typeof(ItemsPage));
-                    e.Handled = true;
-                }
-            }
         }
     }
 }

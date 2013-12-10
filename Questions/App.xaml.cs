@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.Devices.Sensors;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
@@ -28,6 +29,10 @@ namespace Questions
     /// </summary>
     sealed partial class App : Application
     {
+        private TypedEventHandler<Accelerometer, AccelerometerShakenEventArgs> shakenHandler;
+        private Accelerometer accelerometer;
+        private bool easterEggState = false;
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -36,6 +41,18 @@ namespace Questions
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+
+            RegisterShaken();
+        }
+
+        private void RegisterShaken()
+        {
+            shakenHandler = new TypedEventHandler<Accelerometer, AccelerometerShakenEventArgs>(OnShaken);
+            accelerometer = Accelerometer.GetDefault();
+            if (accelerometer != null)
+            {
+                accelerometer.Shaken += shakenHandler;
+            }
         }
 
         /// <summary>
@@ -165,6 +182,26 @@ namespace Questions
             var deferral = e.SuspendingOperation.GetDeferral();
             //TODO: Save application state and stop any background activity
             deferral.Complete();
+        }
+
+
+        private void OnShaken(Accelerometer sender, AccelerometerShakenEventArgs args)
+        {
+            var dispatcher = Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher;
+            var runOperation = dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                var content = Window.Current.Content;
+                Frame rootFrame = content as Frame;
+                if (easterEggState)
+                {
+                    rootFrame.Navigate(typeof(ItemsPage));
+                }
+                else
+                {
+                    rootFrame.Navigate(typeof(EasterEggPage));
+                }
+                easterEggState = !easterEggState;
+            });
         }
     }
 }

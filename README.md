@@ -24,11 +24,12 @@ Stack Overflow; StackOverflow; Stack Exchange; Questions; Reader; StackExchange;
 
 Questions 1.0.4.x features:
 
-* Questions now are synchronized across devices.
-* New "mark as read" only selected questions.
-* Question list gets updated when the app is running and a background task is executed (Windows 8.1 bug).
-* Question list gets updated when the app is running and roaming application data is synchronized.
-* Import and export settings from the settings charm.
+* Now "mark as read" only selected questions, apart from the old "mark all as read".
+* Read questions now are synchronized across devices. So you do not need to remove them multiple times.
+* Now the list of questions is updated after a background task is executed if the app is running (needed for Windows 8.1).
+* Now the list of questions is updated after roaming application data is synchronized if the app is running.
+* Import and export settings using the links in the settings charm.
+* Shake to enter or to exit from the Easter Egg.
 * Fixing tutorial typo.
 
 Questions 1.0.3.0 features:
@@ -39,10 +40,9 @@ Questions 1.0.3.0 features:
 
 Questions 1.0.0.2 new features:
 
-* Now share questions with other apps (share links).
+* Share questions (links) with other apps.
 * Press F5 to refresh the questions list.
 * Press ENTER to add a tag from the TextBox.
-* Copy to get into the Easter egg, or paste to get out of it.
 
 Questions 1.0.0.1 new features:
 
