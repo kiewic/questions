@@ -106,7 +106,8 @@ namespace QuestionsBackgroundTasks
             get
             {
                 string websiteUrl = WebsiteUrl;
-                return SettingsManager.GetWebsiteFaviconUrl(websiteUrl);
+                string faviconUrl = SettingsManager.GetWebsiteFaviconUrl(websiteUrl);
+                return faviconUrl;
             }
         }
 

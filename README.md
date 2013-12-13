@@ -5,7 +5,7 @@ Questions is an app to keep you up to date with the latest questions from the St
 
 You define what websites you are interested on and you can narrow the results by choosing tags for each website. E.g.: If you choose StackOverflow.com, you may choose C# and C++11 tags, so you only see questions related to C# and C++11.
 
-Programming and computers are not the only available topics, there are more topics like travel, cooking, games, languages, mathematics, history, politics, etc.
+Programming and computers are not the only available topics, there are more topics like travels, cooking, games, languages, mathematics, history, politics, etc.
 
 Note: You must be familiar with Stack Exchange tags. Not every word or sentence is a valid Stack Exchange tag. For a complete list of available tags, visit: http://stackoverflow.com/tags
 
@@ -13,8 +13,10 @@ Note: You must be familiar with Stack Exchange tags. Not every word or sentence 
 
 * Add Questions to your lock screen to receive updated questions every 15 minutes.
 * Choose Questions as your detailed status app (in lock screen settings) so you continue seeing questions even when you lock your computer.
-* Use the "mark all as read" button to dismiss the current listed questions.
+* Use the "mark as read" button to dismiss selected questions.
+* Use the "mark all as read" button to dismiss all listed questions.
 * Share questions with other apps.
+* Mark a question as read in one device, and it will be marked as read in all your devices.
 
 ### Keywords
 
@@ -29,7 +31,6 @@ Questions 1.0.4.x features:
 * Now the list of questions is updated after a background task is executed if the app is running (needed for Windows 8.1).
 * Now the list of questions is updated after roaming application data is synchronized if the app is running.
 * Import and export settings using the links in the settings charm.
-* Shake to enter or to exit from the Easter Egg.
 * Fixing tutorial typo.
 
 Questions 1.0.3.0 features:
