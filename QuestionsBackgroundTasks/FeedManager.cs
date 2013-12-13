@@ -61,6 +61,7 @@ namespace QuestionsBackgroundTasks
                 if (listChanged)
                 {
                     Debug.WriteLine("Questions list changed.");
+                    QuestionsManager.RemoveQuestionsInReadListAndSave(); // TODO: Save could be repeated in next step.
                     QuestionsManager.LimitTo150AndSave();
                     SettingsManager.SaveLocal(); // Save updated latestPubDate.
                     UpdateTileAndBadge();

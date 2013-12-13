@@ -78,6 +78,7 @@ namespace Questions
 
             // Retrieve questions, skip the LatestPubDate validation and save all questions.
             QuerySingleWebsiteResult result = await FeedManager.QuerySingleWebsiteAsync(website.ToString(), tagEncoded, true);
+            QuestionsManager.RemoveQuestionsInReadListAndSave(); // TODO: Save could be repeated in next step.
             QuestionsManager.LimitTo150AndSave();
 
             if (result.FileFound)
