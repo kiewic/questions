@@ -15,24 +15,32 @@ namespace QuestionsBackgroundTasks
     {
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
+            AddQuestionsResult result = null;
             BackgroundTaskDeferral deferral = taskInstance.GetDeferral();
 
-#if DEBUG
+            #if DEBUG
             InvokeSimpleToast("Hello from " + taskInstance.Task.Name);
-#endif
+            #endif
 
             try
             {
-                await FeedManager.QueryWebsitesAsync();
+                result = await FeedManager.QueryWebsitesAsync();
+
+                #if DEBUG
+                InvokeSimpleToast(String.Format(
+                    "There are {0} new questions and {1} updated questions for you.",
+                    result.AddedQuestions,
+                    result.UpdatedQuestions));
+                #endif
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex);
-            }
 
-#if DEBUG
-            InvokeSimpleToast("There are new questions for you.");
-#endif
+                #if DEBUG
+                InvokeSimpleToast(ex.Message);
+                #endif
+            }
 
             deferral.Complete();
         }

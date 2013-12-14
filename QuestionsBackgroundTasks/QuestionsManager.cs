@@ -14,6 +14,13 @@ using Windows.Web.Syndication;
 
 namespace QuestionsBackgroundTasks
 {
+    public enum AddQuestionResult
+    {
+        None = 0,
+        Added,
+        Updated
+    }
+
     public sealed class QuestionsManager
     {
         private const string QuestionsKey = "Questions";
@@ -72,9 +79,9 @@ namespace QuestionsBackgroundTasks
         }
 
         // This method can be call simultaneously. Make sure only one thread is touching it.
-        public static bool AddQuestions(string websiteUrl, SyndicationFeed feed, bool skipLatestPubDate)
+        public static AddQuestionsResult AddQuestions(string websiteUrl, SyndicationFeed feed, bool skipLatestPubDate)
         {
-            bool questionsChanged = false;
+            AddQuestionsResult globalResult = new AddQuestionsResult();
 
             DateTimeOffset latestPubDate = SettingsManager.GetLastestPubDate(websiteUrl);
             DateTimeOffset newLatestPubDate = DateTimeOffset.MinValue;
@@ -88,37 +95,41 @@ namespace QuestionsBackgroundTasks
 
                 foreach (SyndicationItem item in feed.Items)
                 {
+                    AddQuestionResult result = AddQuestionResult.None;
                     if (skipLatestPubDate || DateTimeOffset.Compare(item.PublishedDate.DateTime, latestPubDate) > 0)
                     {
-                        Debug.WriteLine("{0} > {1}", item.PublishedDate.DateTime, latestPubDate);
+                        result = AddQuestion(websiteUrl, item);
 
-                        if (AddQuestion(websiteUrl, item))
+                        // Chances are we need to update the LatestPubDate.
+                        if (result == AddQuestionResult.Added && item.PublishedDate > newLatestPubDate)
                         {
-                            questionsChanged = true;
-
-                            if (item.PublishedDate > newLatestPubDate)
-                            {
-                                newLatestPubDate = item.PublishedDate;
-                                Debug.WriteLine("New {0} LastestPubDate: {1}", websiteUrl, newLatestPubDate);
-                            }
+                            newLatestPubDate = item.PublishedDate;
+                            Debug.WriteLine("New {0} LastestPubDate: {1}", websiteUrl, newLatestPubDate);
                         }
                     }
                     else
                     {
-                        if (UpdateQuestion(websiteUrl, item))
-                        {
-                            questionsChanged = true;
-                        }
+                        result = UpdateQuestion(websiteUrl, item);
+                    }
+
+                    switch (result)
+                    {
+                        case AddQuestionResult.Added:
+                            globalResult.AddedQuestions++;
+                            break;
+                        case AddQuestionResult.Updated:
+                            globalResult.UpdatedQuestions++;
+                            break;
                     }
                 }
 
                 // If the quesiton list did not change, there should not be a new LatestPubDate.
-                if (questionsChanged)
+                if (globalResult.AddedQuestions > 0)
                 {
                     SettingsManager.SetLastestPubDate(websiteUrl, newLatestPubDate);
                 }
 
-                return questionsChanged;
+                return globalResult;
             }
             finally
             {
@@ -160,7 +171,7 @@ namespace QuestionsBackgroundTasks
         }
 
         // NOTE: Adding a single question does not load or save settings. Good for performance.
-        private static bool AddQuestion(string website, SyndicationItem item)
+        private static AddQuestionResult AddQuestion(string website, SyndicationItem item)
         {
             // If the latestPubDate validation was skipped, it could happend that que query returns
             // questions we already have.
@@ -193,15 +204,15 @@ namespace QuestionsBackgroundTasks
             questionsCollection.Add(item.Id, questionObject);
 
             Debug.WriteLine("New question: {0}", item.Id);
-            return true;
+            return AddQuestionResult.Added;
         }
 
-        private static bool UpdateQuestion(string website, SyndicationItem item)
+        private static AddQuestionResult UpdateQuestion(string website, SyndicationItem item)
         {
             if (!questionsCollection.ContainsKey(item.Id))
             {
                 Debug.WriteLine("Question skipped: {0}", item.Id);
-                return false;
+                return AddQuestionResult.None;
             }
 
             JsonObject questionObject = questionsCollection.GetNamedObject(item.Id);
@@ -212,11 +223,11 @@ namespace QuestionsBackgroundTasks
             {
                 questionObject.SetNamedValue("Title", JsonValue.CreateStringValue(newTitle));
                 Debug.WriteLine("Question updated: {0}", item.Id);
-                return true;
+                return AddQuestionResult.Added;
             }
 
             Debug.WriteLine("Question up to date: {0}", item.Id);
-            return false;
+            return AddQuestionResult.None;
         }
 
         public static void RemoveQuestionsAndSave(string websiteUrl, string tag)

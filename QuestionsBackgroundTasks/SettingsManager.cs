@@ -26,6 +26,7 @@ namespace QuestionsBackgroundTasks
         private static IPropertySet roamingValues;
         private static IPropertySet localValues;
 
+        // This date-time is only updated when all queries are successful.
         public static DateTimeOffset LatestQueryDate
         {
             get

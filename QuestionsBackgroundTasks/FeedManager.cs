@@ -23,7 +23,7 @@ namespace QuestionsBackgroundTasks
         // 5. Update tile.
         // 6. Update badge.
         // TODO: Maybe check for buzz words here.
-        public static IAsyncAction QueryWebsitesAsync()
+        public static IAsyncOperation<AddQuestionsResult> QueryWebsitesAsync()
         {
             return AsyncInfo.Run(async (cancellationToken) =>
             {
@@ -31,7 +31,8 @@ namespace QuestionsBackgroundTasks
                 await QuestionsManager.LoadAsync();
 
                 // Query websites in parallel.
-                List<Task<QuerySingleWebsiteResult>> tasks = new List<Task<QuerySingleWebsiteResult>>();
+
+                List<Task<AddQuestionsResult>> tasks = new List<Task<AddQuestionsResult>>();
                 IEnumerable<string> keys = SettingsManager.GetWebsiteKeys();
                 foreach (string website in keys)
                 {
@@ -42,49 +43,56 @@ namespace QuestionsBackgroundTasks
                 if (tasks.Count == 0)
                 {
                     // There is nothing to wait.
-                    return;
+                    return new AddQuestionsResult();
                 }
 
                 await Task.Factory.ContinueWhenAll(tasks.ToArray(), (tasks2) => {});
 
-                bool listChanged = false;
-                foreach (Task<QuerySingleWebsiteResult> task in tasks)
+                // Add up the results.
+                AddQuestionsResult result = new AddQuestionsResult();
+                foreach (Task<AddQuestionsResult> task in tasks)
                 {
-                    QuerySingleWebsiteResult result = task.Result;
-                    if (result.Changed)
+                    AddQuestionsResult taskResult = task.Result;
+                    result.AddedQuestions += taskResult.AddedQuestions;
+                    result.UpdatedQuestions += taskResult.UpdatedQuestions;
+                    if (!taskResult.FileFound)
                     {
-                        listChanged = true;
+                        result.FileFound = false;
                     }
                 }
 
+                Debug.WriteLine(
+                    "{0} questions added, {0} questions modified.",
+                    result.AddedQuestions,
+                    result.UpdatedQuestions);
+
                 // Only limit and save questions if list changed.
-                if (listChanged)
+                if (result.AddedQuestions > 0 || result.UpdatedQuestions > 0)
                 {
-                    Debug.WriteLine("Questions list changed.");
                     QuestionsManager.RemoveQuestionsInReadListAndSave(); // TODO: Save could be repeated in next step.
                     QuestionsManager.LimitTo150AndSave();
                     SettingsManager.SaveLocal(); // Save updated latestPubDate.
                     UpdateTileAndBadge();
                 }
-                else
+
+                // Update last query date-time, only if all queries were successful.
+                if (result.FileFound)
                 {
-                    Debug.WriteLine("Questions list did not change.");
+                    SettingsManager.LatestQueryDate = DateTimeOffset.Now;
                 }
 
-                // Update last query date/time.
-                // TODO: Only modify date/time if all queries were successful.
-                SettingsManager.LatestQueryDate = DateTimeOffset.Now;
+                return result;
             });
         }
 
-        public static IAsyncOperation<QuerySingleWebsiteResult> QuerySingleWebsiteAsync(
+        public static IAsyncOperation<AddQuestionsResult> QuerySingleWebsiteAsync(
             string website,
             string query,
             bool skipLatestPubDate)
         {
             return AsyncInfo.Run(async (cancellationToken) =>
             {
-                QuerySingleWebsiteResult result = new QuerySingleWebsiteResult();
+                AddQuestionsResult result = new AddQuestionsResult();
 
                 Uri uri;
                 if (!SettingsManager.TryCreateUri(website, query, out uri))
@@ -132,11 +140,7 @@ namespace QuestionsBackgroundTasks
                     }
                 }
 
-                if (QuestionsManager.AddQuestions(website, feed, skipLatestPubDate))
-                {
-                    result.Changed = true;
-                }
-
+                result = QuestionsManager.AddQuestions(website, feed, skipLatestPubDate);
                 result.FileFound = true;
                 return result;
             });

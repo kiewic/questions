@@ -99,12 +99,12 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AddQuestionsResult.cs" />
     <Compile Include="BindableReadQuestion.cs" />
     <Compile Include="BindableWebsite.cs" />
     <Compile Include="PowerpuffJsonObject.cs" />
     <Compile Include="BindableTagOption.cs" />
     <Compile Include="BindableWebsiteOption.cs" />
-    <Compile Include="QuerySingleWebsiteResult.cs" />
     <Compile Include="ReadListManager.cs" />
     <Compile Include="SettingsManager.cs" />
     <Compile Include="FeedManager.cs" />
