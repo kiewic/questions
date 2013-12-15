@@ -209,9 +209,9 @@ namespace Questions
             Debug.WriteLine(message);
 
             #if DEBUG
-            try
+            var runOperation = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                var runOperation = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                try
                 {
                     var dialog = new MessageDialog(message, title);
                     if (showOperation != null)
@@ -219,12 +219,13 @@ namespace Questions
                         showOperation.Cancel();
                     }
                     showOperation = dialog.ShowAsync();
-                });
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex);
-            }
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    // E_ACCESSDENIED is expected here if the RequestAccessAsync operation is using the screen.
+                    Debug.WriteLine(ex);
+                }
+            });
             #endif
 
             // Do not force a query when a task completed. This handler is called just after the background task
