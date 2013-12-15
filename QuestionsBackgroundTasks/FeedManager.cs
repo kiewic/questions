@@ -69,7 +69,7 @@ namespace QuestionsBackgroundTasks
                 // Only limit and save questions if list changed.
                 if (result.AddedQuestions > 0 || result.UpdatedQuestions > 0)
                 {
-                    QuestionsManager.RemoveQuestionsInReadListAndSave(); // TODO: Save could be repeated in next step.
+                    await QuestionsManager.RemoveQuestionsInReadListAndSaveAsync(); // TODO: Save could be repeated in next step.
                     QuestionsManager.LimitTo150AndSave();
                     SettingsManager.SaveLocal(); // Save updated latestPubDate.
                     UpdateTileAndBadge();

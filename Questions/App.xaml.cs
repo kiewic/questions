@@ -91,8 +91,7 @@ namespace Questions
                 // to remove the questions that are listed in the "read list".
                 SettingsManager.Load();
                 await QuestionsManager.LoadAsync();
-                await ReadListManager.LoadAsync();
-                QuestionsManager.RemoveQuestionsInReadListAndSave();
+                await QuestionsManager.RemoveQuestionsInReadListAndSaveAsync();
 
                 bool isNewApp = SettingsManager.IsEmpty();
                 Type initialPage = typeof(ItemsPage);

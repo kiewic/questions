@@ -197,10 +197,9 @@ namespace Questions
 
             // Also unload and load read-list.
             ReadListManager.Unload();
-            await ReadListManager.LoadAsync();
 
             // When data changes, the read-list may contain new read-questions.
-            QuestionsManager.RemoveQuestionsInReadListAndSave();
+            await QuestionsManager.RemoveQuestionsInReadListAndSaveAsync();
 
             HandleTaskCompletedOrDataChanged(message, title);
         }

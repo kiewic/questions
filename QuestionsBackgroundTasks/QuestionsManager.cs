@@ -323,35 +323,38 @@ namespace QuestionsBackgroundTasks
             }
         }
 
-        public static void RemoveQuestionsInReadListAndSave()
+        public static IAsyncAction RemoveQuestionsInReadListAndSaveAsync()
         {
-            CheckSettingsAreLoaded();
-
-            JsonArray readList = ReadListManager.GetReadList();
-
-            // Search for read-list-questions in questions-list.
-            int removedQuestions = 0;
-            foreach (IJsonValue jsonValue in readList)
+            return AsyncInfo.Run(async (cancellationToken) =>
             {
-                string id = jsonValue.GetString();
-                if (questionsCollection.ContainsKey(id))
+                CheckSettingsAreLoaded();
+
+                JsonArray readList = await ReadListManager.GetReadListAsync();
+
+                // Search for read-list-questions in questions-list.
+                int removedQuestions = 0;
+                foreach (IJsonValue jsonValue in readList)
                 {
-                    if (questionsCollection.Remove(id))
+                    string id = jsonValue.GetString();
+                    if (questionsCollection.ContainsKey(id))
                     {
-                        removedQuestions++;
+                        if (questionsCollection.Remove(id))
+                        {
+                            removedQuestions++;
+                        }
                     }
                 }
-            }
 
-            // Only save if at least one question was deleted.
-            if (removedQuestions > 0)
-            {
-                // Do not wait until questions-save is completed.
-                var saveOperation = QuestionsManager.SaveAsync();
+                // Only save if at least one question was deleted.
+                if (removedQuestions > 0)
+                {
+                    // Do not wait until questions-save is completed.
+                    var saveOperation = QuestionsManager.SaveAsync();
 
-                // And refresh tile and badge.
-                FeedManager.UpdateTileAndBadge();
-            }
+                    // And refresh tile and badge.
+                    FeedManager.UpdateTileAndBadge();
+                }
+            });
         }
     }
 }

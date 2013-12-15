@@ -19,11 +19,11 @@ namespace QuestionsBackgroundTasks
         private static JsonObject rootObject;
         private static JsonArray readList;
 
-        public static IAsyncAction LoadAsync()
+        private static IAsyncAction LoadAsync()
         {
             return AsyncInfo.Run(async (cancellationToken) =>
             {
-                if (rootObject != null)
+                if (rootObject != null && readList != null)
                 {
                     // File already loaded, there is nothing to do.
                     return;
@@ -59,6 +59,7 @@ namespace QuestionsBackgroundTasks
         public static void Unload()
         {
             rootObject = null;
+            readList = null;
         }
 
         public static IAsyncAction SaveAsync()
@@ -73,11 +74,11 @@ namespace QuestionsBackgroundTasks
             readList.Add(JsonValue.CreateStringValue(questionId));
         }
 
-        internal static JsonArray GetReadList()
+        internal static async Task<JsonArray> GetReadListAsync()
         {
             if (readList == null)
             {
-                Debugger.Break();
+                await LoadAsync();
             }
             return readList;
         }
