@@ -60,6 +60,7 @@ namespace QuestionsBackgroundTasks
 
         public static async Task SaveAsync(StorageFolder storageFolder, string fileName, string content)
         {
+            Debug.WriteLine("SaveAsync of {0} started.", fileName);
             await LockAsync();
             try
             {
@@ -71,6 +72,7 @@ namespace QuestionsBackgroundTasks
             {
                 Unlock();
             }
+            Debug.WriteLine("SaveAsync of {0} completed.", fileName);
         }
 
         public static async Task<bool> FileExistsAsync(StorageFolder storageFolder, string fileName)

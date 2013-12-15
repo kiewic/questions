@@ -76,17 +76,14 @@ namespace Questions
 
             await QuestionsManager.LoadAsync();
 
-            // Retrieve questions, skip the LatestPubDate validation and save all questions.
-            AddQuestionsResult result = await FeedManager.QuerySingleWebsiteAsync(website.ToString(), tagEncoded, true);
-            await QuestionsManager.RemoveQuestionsInReadListAndSaveAsync(); // TODO: Save could be repeated in next step.
-            QuestionsManager.LimitTo150AndSave();
+            AddQuestionsResult result = await FeedManager.QueryTagAsync(website.ToString(), tagEncoded);
+
 
             if (result.FileFound)
             {
                 website.AddTagAndSave(TagsView, tag);
-                FeedManager.UpdateTileAndBadge();
 
-                // Tag added, clear the test.
+                // Tag added successfully, clear the text.
                 TagBox.Text = "";
             }
             else

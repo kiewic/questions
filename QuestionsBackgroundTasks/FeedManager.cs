@@ -69,16 +69,36 @@ namespace QuestionsBackgroundTasks
                 // Only limit and save questions if list changed.
                 if (result.AddedQuestions > 0 || result.UpdatedQuestions > 0)
                 {
-                    await QuestionsManager.RemoveQuestionsInReadListAndSaveAsync(); // TODO: Save could be repeated in next step.
-                    QuestionsManager.LimitTo150AndSave();
-                    SettingsManager.SaveLocal(); // Save updated latestPubDate.
+                    uint removedQuestions = await QuestionsManager.RemoveQuestionsInReadList();
+                    await QuestionsManager.LimitTo150AndSaveAsync();
                     UpdateTileAndBadge();
+
+                    SettingsManager.SaveLocal(); // Save updated latestPubDate.
                 }
 
                 // Update last query date-time, only if all queries were successful.
                 if (result.FileFound)
                 {
                     SettingsManager.LatestQueryDate = DateTimeOffset.Now;
+                }
+
+                return result;
+            });
+        }
+
+        public static IAsyncOperation<AddQuestionsResult> QueryTagAsync(string websiteUrl, string tagEncoded)
+        {
+            return AsyncInfo.Run(async (cancellationToken) =>
+            {
+                // Retrieve questions, skip the LatestPubDate validation and add all questions.
+                AddQuestionsResult result = await FeedManager.QuerySingleWebsiteAsync(websiteUrl, tagEncoded, true);
+
+                // Only limit and save questions if list changed.
+                if (result.AddedQuestions > 0 || result.UpdatedQuestions > 0)
+                {
+                    uint removedQuestions = await QuestionsManager.RemoveQuestionsInReadList();
+                    await QuestionsManager.LimitTo150AndSaveAsync();
+                    FeedManager.UpdateTileAndBadge();
                 }
 
                 return result;

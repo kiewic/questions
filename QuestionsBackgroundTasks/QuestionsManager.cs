@@ -138,7 +138,7 @@ namespace QuestionsBackgroundTasks
             }
         }
 
-        public static async void LimitTo150AndSave()
+        internal static async Task LimitTo150AndSaveAsync()
         {
             Debug.WriteLine("Questions count before limit: {0}", questionsCollection.Count);
 
@@ -164,8 +164,6 @@ namespace QuestionsBackgroundTasks
             }
 
             Debug.WriteLine("Questions count after limit: {0}", questionsCollection.Count);
-
-            // TODO: Get the newest question, and store the PubDate, so older questions aren't added to the list again.
 
             await SaveAsync();
         }
@@ -323,7 +321,23 @@ namespace QuestionsBackgroundTasks
             }
         }
 
-        public static IAsyncAction RemoveQuestionsInReadListAndSaveAsync()
+        // Notice that tile update, badge update and saveing only occurs if at least one questions is removed.
+        public static IAsyncAction RemoveReadQuestionsUpdateTileAndBadgeAndSaveAsync()
+        {
+            return AsyncInfo.Run(async (cancellationToken) =>
+            {
+                uint removedQuestions = await RemoveQuestionsInReadList();
+
+                // Only save if at least one question was deleted.
+                if (removedQuestions > 0)
+                {
+                    await QuestionsManager.SaveAsync();
+                    FeedManager.UpdateTileAndBadge();
+                }
+            });
+        }
+
+        public static IAsyncOperation<uint> RemoveQuestionsInReadList()
         {
             return AsyncInfo.Run(async (cancellationToken) =>
             {
@@ -332,7 +346,7 @@ namespace QuestionsBackgroundTasks
                 JsonArray readList = await ReadListManager.GetReadListAsync();
 
                 // Search for read-list-questions in questions-list.
-                int removedQuestions = 0;
+                uint removedQuestions = 0;
                 foreach (IJsonValue jsonValue in readList)
                 {
                     string id = jsonValue.GetString();
@@ -345,15 +359,7 @@ namespace QuestionsBackgroundTasks
                     }
                 }
 
-                // Only save if at least one question was deleted.
-                if (removedQuestions > 0)
-                {
-                    // Do not wait until questions-save is completed.
-                    var saveOperation = QuestionsManager.SaveAsync();
-
-                    // And refresh tile and badge.
-                    FeedManager.UpdateTileAndBadge();
-                }
+                return removedQuestions;
             });
         }
     }
