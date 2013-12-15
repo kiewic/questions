@@ -24,6 +24,10 @@ Stack Overflow; StackOverflow; Stack Exchange; Questions; Reader; StackExchange;
 
 ### Notes
 
+Questions 1.0.5.x notes:
+
+* Fixing bug that prevents the background task to execute successfully.
+
 Questions 1.0.4.x features:
 
 * Now "mark as read" only selected questions, apart from the old "mark all as read".
