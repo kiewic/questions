@@ -28,7 +28,7 @@ namespace QuestionsBackgroundTasks
 
                 #if DEBUG
                 InvokeSimpleToast(String.Format(
-                    "There are {0} new questions and {1} updated questions for you.",
+                    "There are {0} new questions and {1} updated questions.",
                     result.AddedQuestions,
                     result.UpdatedQuestions));
                 #endif
@@ -49,7 +49,7 @@ namespace QuestionsBackgroundTasks
         {
             // GetTemplateContent returns a Windows.Data.Xml.Dom.XmlDocument object containing
             // the toast XML
-            XmlDocument toastXml = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastImageAndText02);
+            XmlDocument toastXml = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastText02);
 
             // You can use the methods from the XML document to specify all of the
             // required parameters for the toast.
