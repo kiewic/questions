@@ -244,7 +244,7 @@ namespace QuestionsBackgroundTasks
                 {
                     // Is it the selected tag?
                     // A null tag matches any tag.
-                    if (tag == null || tempQuestion.Categories.ContainsKey(tag))
+                    if (tag == null || tempQuestion.Tags.ContainsKey(tag))
                     {
                         keysToDelete.Add(keyValuePair.Key);
                     }

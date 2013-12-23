@@ -111,11 +111,19 @@ namespace QuestionsBackgroundTasks
             }
         }
 
-        public JsonObject Categories
+        public JsonObject Tags
         {
             get
             {
                 return json.GetNamedObject("Categories");
+            }
+        }
+
+        public string TagsStrip
+        {
+            get
+            {
+                return String.Join(", ", Tags.Keys);
             }
         }
     }

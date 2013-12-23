@@ -13,25 +13,35 @@
             <Setter Property="FontSize" Value="30" />
         </Style>
         <DataTemplate x:Key="WideQuestion">
-            <Grid x:Name="Foo" HorizontalAlignment="Stretch" Margin="0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="auto" />
-                    <ColumnDefinition Width="auto" />
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0" Margin="0">
-                    <TextBlock FontSize="28" Text="{Binding Title}" />
-                    <StackPanel Grid.Column="1" Margin="0" Orientation="Horizontal">
-                        <Image Width="10" Height="10" Source="{Binding FaviconUrl}" Margin="0,0,5,0" />
+            <Grid Margin="2,0,2,0" Background="{StaticResource ApplicationPageBackgroundThemeBrush}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0" Margin="0,-4,0,-4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" FontSize="26" Text="{Binding Title}" />
+                    <TextBlock Grid.Column="1" FontSize="26" Text="{Binding PubDateDiff}" FontWeight="Bold" Foreground="DarkGray" />
+                </Grid>
+                <Grid Grid.Row="1" Margin="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Image Grid.Column="0" Width="16" Height="16" Source="{Binding FaviconUrl}" Margin="2,0,12,0" />
+                    <StackPanel Grid.Column="1" Margin="0">
+                        <TextBlock FontSize="12" Foreground="Gray" Text="{Binding TagsStrip}" />
                         <TextBlock FontSize="12" Foreground="DarkGray" Text="{Binding WebsiteUrl}" />
                     </StackPanel>
-                </StackPanel>
-                <TextBlock Grid.Column="1" FontSize="28" FontWeight="Bold" Foreground="DarkGray" Text="{Binding PubDateDiff}" />
+                </Grid>
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="NarrowQuestion">
-            <StackPanel Grid.Column="0" Margin="0">
-                <TextBlock FontSize="24" Text="{Binding Title}" TextWrapping="Wrap" />
+            <StackPanel Grid.Column="0" Margin="2,0,2,0" Background="{StaticResource ApplicationPageBackgroundThemeBrush}">
+                <TextBlock FontSize="22" Text="{Binding Title}" TextWrapping="Wrap" />
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="auto" />
@@ -39,6 +49,7 @@
                     </Grid.ColumnDefinitions>
                     <Image Grid.Column="0" Width="16" Height="16" Source="{Binding FaviconUrl}" Margin="0,0,10,0" />
                     <StackPanel Grid.Column="1">
+                        <TextBlock FontSize="12" Foreground="Gray" Text="{Binding TagsStrip}" />
                         <TextBlock FontSize="12" Foreground="DarkGray" Text="{Binding WebsiteUrl}" />
                         <TextBlock FontSize="12" Foreground="DarkGray"  Text="{Binding PubDateDiff}" />
                     </StackPanel>
@@ -82,7 +93,7 @@
             SelectionChanged="QuestionsView_SelectionChanged"
             IsItemClickEnabled="True"
             SelectionMode="Multiple"
-            Padding="30"
+            Padding="10"
             ItemTemplate="{StaticResource WideQuestion}"
             ItemContainerStyle="{StaticResource CustomizedListViewItemContainer}"
             IsSwipeEnabled="True">
@@ -101,7 +112,7 @@
 
                 <VisualState x:Name="Snapped">
                     <Storyboard>
-                        <ColorAnimation To="#DEDEDE" Storyboard.TargetName="QuestionsGrid" Storyboard.TargetProperty="(Grid.Background).(SolidColorBrush.Color)" />
+                        <ColorAnimation To="#EDEDED" Storyboard.TargetName="MarkAllReadButton" Storyboard.TargetProperty="(Grid.Background).(SolidColorBrush.Color)" />
                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="QuestionsView" Storyboard.TargetProperty="ItemTemplate">
                             <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource NarrowQuestion}" />
                         </ObjectAnimationUsingKeyFrames>
