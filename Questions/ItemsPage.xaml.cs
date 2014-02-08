@@ -280,16 +280,8 @@ namespace Questions
 
         private void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                // Force a query, that's exactly why the user clicked this button.
-                UpdateQuestionsView(true);
-            }
-            catch (Exception ex)
-            {
-                // TODO: Display an error message.
-                Debug.WriteLine(ex);
-            }
+            // Force a query, that's exactly why the user clicked this button.
+            UpdateQuestionsView(true);
         }
 
         private async void QuestionsView_ItemClick(object sender, ItemClickEventArgs e)
@@ -352,6 +344,11 @@ namespace Questions
                 RefreshButton_Click(null, null);
                 e.Handled = true;
             }
+        }
+
+        private void QuestionsView_Loaded(object sender, RoutedEventArgs e)
+        {
+            Debug.WriteLine((sender as ListView).Focus(FocusState.Keyboard));
         }
     }
 }

@@ -86,6 +86,7 @@
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
         <ProgressBar x:Name="LoadingBar" Style="{StaticResource SettingsProgress}"/>
+        <!-- TODO: Add DataContextChanged event handler to focus the ListView -->
         <ListView
             Grid.Row="1"
             x:Name="QuestionsView"

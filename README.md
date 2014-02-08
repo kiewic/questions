@@ -24,6 +24,11 @@ Stack Overflow; StackOverflow; Stack Exchange; Questions; Reader; StackExchange;
 
 ### Notes
 
+Questions 1.0.6.x notes:
+
+* Adding tags strip per question.
+* Fixing selected question background.
+
 Questions 1.0.5.x notes:
 
 * Fixing bug that prevents the background task to execute successfully.

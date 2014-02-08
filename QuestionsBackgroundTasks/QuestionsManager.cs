@@ -283,9 +283,11 @@ namespace QuestionsBackgroundTasks
             }
         }
 
+        // TODO: Use ListView.ScrollIntoView().
         public static void DisplayQuestions(ListView listView, IList<BindableQuestion> list)
         {
             listView.ItemsSource = list;
+            //listView.ScrollIntoView(listView.Items[0]);
         }
 
         // TODO: I fthis is an expensive operation, maybe we should consider to cache the result.
