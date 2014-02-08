@@ -15,12 +15,12 @@ namespace QuestionsBackgroundTasks
         private const string BuzzWordsKey = "BuzzWords";
 
         string id;
-        PowerpuffJsonObject roamingJson;
+        JsonObject roamingJsonObject;
 
         public BindableWebsite(string id, JsonObject roamingJsonObject)
         {
             this.id = id;
-            roamingJson = new PowerpuffJsonObject(roamingJsonObject);
+            this.roamingJsonObject = roamingJsonObject;
         }
 
         public override string ToString()
@@ -30,7 +30,7 @@ namespace QuestionsBackgroundTasks
 
         public void AddTagAndSave(ListView listView, string tag)
         {
-            JsonObject tagsCollection = roamingJson.GetNamedObject(TagsKey);
+            JsonObject tagsCollection = roamingJsonObject.GetNamedObject(TagsKey);
 
             if (tagsCollection.ContainsKey(tag))
             {
@@ -46,29 +46,12 @@ namespace QuestionsBackgroundTasks
             SettingsManager.SaveRoaming();
         }
 
-        private bool JsonArrayContainsStringValue(JsonArray jsonArray, string value, out IJsonValue selectedValue)
-        {
-            selectedValue = null;
-
-            foreach (IJsonValue jsonValue in jsonArray)
-            {
-                string currentValue = jsonValue.GetString();
-                if (String.Compare(value, currentValue, StringComparison.OrdinalIgnoreCase) == 0)
-                {
-                    selectedValue = jsonValue;
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         public void AddBuzzWordAndSave(ListView listView, string buzzWord)
         {
-            JsonArray buzzWordsCollection = roamingJson.GetOrCreateNamedArray(BuzzWordsKey);
+            JsonArray buzzWordsCollection = roamingJsonObject.GetOrCreateNamedArray(BuzzWordsKey);
 
             IJsonValue selectedValue;
-            if (JsonArrayContainsStringValue(buzzWordsCollection, buzzWord, out selectedValue))
+            if (buzzWordsCollection.ContainsStringValue(buzzWord, out selectedValue))
             {
                 // We already have this buzz word.
                 Debug.WriteLine("Buzz word repeated: {0}", buzzWord);
@@ -83,7 +66,7 @@ namespace QuestionsBackgroundTasks
 
         public void DeleteTagAndSave(ListView listView, string tag)
         {
-            JsonObject tagsCollection = roamingJson.GetNamedObject(TagsKey);
+            JsonObject tagsCollection = roamingJsonObject.GetNamedObject(TagsKey);
 
             if (tagsCollection.Remove(tag))
             {
@@ -98,10 +81,10 @@ namespace QuestionsBackgroundTasks
 
         public void DeleteBuzzWordAndSave(ListView listView, string buzzWord)
         {
-            JsonArray buzzWordsCollection = roamingJson.GetOrCreateNamedArray(BuzzWordsKey);
+            JsonArray buzzWordsCollection = roamingJsonObject.GetOrCreateNamedArray(BuzzWordsKey);
 
             IJsonValue selectedValue;
-            if (JsonArrayContainsStringValue(buzzWordsCollection, buzzWord, out selectedValue))
+            if (buzzWordsCollection.ContainsStringValue(buzzWord, out selectedValue))
             {
                 buzzWordsCollection.Remove(selectedValue);
 
@@ -113,7 +96,7 @@ namespace QuestionsBackgroundTasks
 
         public void DisplayTags(ListView listView)
         {
-            JsonObject tagsCollection = roamingJson.GetNamedObject(TagsKey);
+            JsonObject tagsCollection = roamingJsonObject.GetNamedObject(TagsKey);
 
             foreach (string tag in tagsCollection.Keys)
             {
@@ -123,7 +106,7 @@ namespace QuestionsBackgroundTasks
 
         public void DisplayBuzzWords(ListView listView)
         {
-            JsonArray buzzWordsCollection = roamingJson.GetOrCreateNamedArray(BuzzWordsKey);
+            JsonArray buzzWordsCollection = roamingJsonObject.GetOrCreateNamedArray(BuzzWordsKey);
 
             foreach (IJsonValue jsonValue in buzzWordsCollection)
             {
@@ -136,7 +119,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return roamingJson.GetNamedString("ApiSiteParameter");
+                return roamingJsonObject.GetNamedStringOrEmptyString("ApiSiteParameter");
             }
         }
 
@@ -144,7 +127,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return roamingJson.GetNamedString("Name");
+                return roamingJsonObject.GetNamedStringOrEmptyString("Name");
             }
         }
 
@@ -152,7 +135,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                string iconUrl = roamingJson.GetNamedString("IconUrl");
+                string iconUrl = roamingJsonObject.GetNamedStringOrEmptyString("IconUrl");
                 return iconUrl;
             }
         }
@@ -161,7 +144,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return roamingJson.GetNamedString("FaviconUrl");
+                return roamingJsonObject.GetNamedStringOrEmptyString("FaviconUrl");
             }
         }
 
@@ -169,7 +152,8 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return roamingJson.ConcatenateNamedObjectKeys(TagsKey);
+                JsonObject jsonObject = roamingJsonObject.GetNamedObject(TagsKey);
+                return jsonObject.ConcatenateKeys();
             }
         }
 
@@ -177,7 +161,8 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return roamingJson.ConcatenateNamedArrayStringValues(BuzzWordsKey);
+                JsonArray jsonArray = roamingJsonObject.GetOrCreateNamedArray(BuzzWordsKey);
+                return jsonArray.ConcatenateStringValues();
             }
         }
 

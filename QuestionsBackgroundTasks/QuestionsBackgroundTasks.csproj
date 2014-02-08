@@ -102,7 +102,7 @@
     <Compile Include="AddQuestionsResult.cs" />
     <Compile Include="BindableReadQuestion.cs" />
     <Compile Include="BindableWebsite.cs" />
-    <Compile Include="PowerpuffJsonObject.cs" />
+    <Compile Include="JsonExtensions.cs" />
     <Compile Include="BindableTagOption.cs" />
     <Compile Include="BindableWebsiteOption.cs" />
     <Compile Include="ReadListManager.cs" />

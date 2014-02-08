@@ -8,15 +8,15 @@ namespace QuestionsBackgroundTasks
 {
     public sealed class BindableTagOption
     {
-        private PowerpuffJsonObject json;
+        private JsonObject innerJsonObject;
         public BindableTagOption(JsonObject jsonObject)
         {
-            json = new PowerpuffJsonObject(jsonObject);
+            this.innerJsonObject = jsonObject;
         }
 
         public override string ToString()
         {
-            return json.GetNamedString("name");
+            return innerJsonObject.GetNamedStringOrEmptyString("name");
         }
 
     }

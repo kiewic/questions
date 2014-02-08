@@ -9,28 +9,28 @@ namespace QuestionsBackgroundTasks
 {
     public sealed class BindableWebsiteOption
     {
-        private PowerpuffJsonObject json;
+        private JsonObject innerJsonObject;
 
         public BindableWebsiteOption(JsonObject jsonObject)
         {
-            json = new PowerpuffJsonObject(jsonObject);
+            this.innerJsonObject = jsonObject;
         }
 
         public override string ToString()
         {
-            return json.GetNamedString("name");
+            return innerJsonObject.GetNamedStringOrEmptyString("name");
         }
 
         public bool IsListable
         {
             get
             {
-                if (json.GetNamedString("site_type") == "meta_site")
+                if (innerJsonObject.GetNamedStringOrEmptyString("site_type") == "meta_site")
                 {
                     return false;
                 }
 
-                if (json.GetNamedString("site_state") == "closed_beta")
+                if (innerJsonObject.GetNamedStringOrEmptyString("site_state") == "closed_beta")
                 {
                     return false;
                 }
@@ -43,7 +43,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return json.GetNamedString("api_site_parameter");
+                return innerJsonObject.GetNamedStringOrEmptyString("api_site_parameter");
             }
         }
 
@@ -51,14 +51,14 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return json.GetNamedString("site_url");
+                return innerJsonObject.GetNamedStringOrEmptyString("site_url");
             }
         }
 
         public string IconUrl
         {
             get{
-                return json.GetNamedString("icon_url");
+                return innerJsonObject.GetNamedStringOrEmptyString("icon_url");
             }
         }
 
@@ -66,7 +66,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return json.GetNamedString("favicon_url");
+                return innerJsonObject.GetNamedStringOrEmptyString("favicon_url");
             }
         }
 
@@ -74,7 +74,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return json.GetNamedString("audience");
+                return innerJsonObject.GetNamedStringOrEmptyString("audience");
             }
         }
 

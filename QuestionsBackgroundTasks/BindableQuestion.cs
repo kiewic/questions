@@ -10,18 +10,18 @@ namespace QuestionsBackgroundTasks
     public sealed class BindableQuestion
     {
         private const string SummaryKey = "Summary";
-        private PowerpuffJsonObject json;
+        private JsonObject innerJsonObject;
         private string id;
 
         public BindableQuestion(string id, JsonObject jsonObject)
         {
             this.id = id;
-            json = new PowerpuffJsonObject(jsonObject);
+            this.innerJsonObject = jsonObject;
         }
 
         public JsonObject ToJsonObject()
         {
-            return json.ToJsonObject();
+            return innerJsonObject;
         }
 
         public string Id
@@ -36,7 +36,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return json.GetNamedString("Website");
+                return innerJsonObject.GetNamedStringOrEmptyString("Website");
             }
         }
 
@@ -44,7 +44,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return json.GetNamedString("Title");
+                return innerJsonObject.GetNamedStringOrEmptyString("Title");
             }
         }
 
@@ -52,7 +52,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return DateTimeOffset.Parse(json.GetNamedString("PubDate"));
+                return DateTimeOffset.Parse(innerJsonObject.GetNamedStringOrEmptyString("PubDate"));
             }
         }
 
@@ -60,7 +60,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return new Uri(json.GetNamedString("Link"));
+                return new Uri(innerJsonObject.GetNamedStringOrEmptyString("Link"));
             }
         }
 
@@ -116,7 +116,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return json.GetNamedObject("Categories");
+                return innerJsonObject.GetNamedObject("Categories");
             }
         }
 
@@ -124,7 +124,7 @@ namespace QuestionsBackgroundTasks
         {
             get
             {
-                return String.Join(", ", Tags.Keys);
+                return Tags.ConcatenateKeys();
             }
         }
 
@@ -135,7 +135,7 @@ namespace QuestionsBackgroundTasks
             string websiteUrl = WebsiteUrl;
             JsonArray buzzWordsCollection = SettingsManager.GetWebsiteBuzzWords(websiteUrl);
             string title = Title.ToLower();
-            string summary = json.GetNamedString(SummaryKey).ToLower();
+            string summary = innerJsonObject.GetNamedStringOrEmptyString(SummaryKey).ToLower();
 
             foreach (IJsonValue jsonValue in buzzWordsCollection)
             {
