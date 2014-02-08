@@ -16,6 +16,8 @@ using Windows.Web.Syndication;
 
 namespace QuestionsBackgroundTasks
 {
+    public delegate void SettingsImportedHandler();
+
     public sealed class SettingsManager
     {
         private const string LatestPubDateKey = "LatestPubDate";
@@ -27,6 +29,8 @@ namespace QuestionsBackgroundTasks
         private static JsonObject localWebsites;
         private static IPropertySet roamingValues;
         private static IPropertySet localValues;
+
+        public static event SettingsImportedHandler SettingsImported;
 
         // This date-time is only updated when all queries are successful.
         public static DateTimeOffset LatestQueryDate
@@ -390,6 +394,11 @@ namespace QuestionsBackgroundTasks
 
             SaveLocal();
             SaveRoaming();
+
+            if (SettingsImported != null)
+            {
+                SettingsImported();
+            }
         }
 
         private static JsonObject Export(IPropertySet values)

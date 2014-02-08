@@ -28,7 +28,7 @@ namespace Questions
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        private SyndicationClient client = new SyndicationClient();
+        private SettingsImportedHandler settingsImportedHandler;
 
         public MainPage()
         {
@@ -41,6 +41,21 @@ namespace Questions
         /// <param name="e">Event data that describes how this page was reached.  The Parameter
         /// property is typically used to configure the page.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            LoadControls();
+
+            settingsImportedHandler = new SettingsImportedHandler(LoadControls);
+            SettingsManager.SettingsImported += settingsImportedHandler;
+        }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            base.OnNavigatedFrom(e);
+
+            SettingsManager.SettingsImported -= settingsImportedHandler;
+        }
+
+        private void LoadControls()
         {
             SettingsManager.LoadAndDisplayWebsites(WebsitesView);
         }

@@ -35,7 +35,6 @@ namespace Questions
         private TypedEventHandler<DataTransferManager, DataRequestedEventArgs> shareHandler;
         private BackgroundTaskCompletedEventHandler taskCompletedHandler;
         private TypedEventHandler<ApplicationData, object> dataChangedHandler;
-        private IAsyncOperation<IUICommand> showOperation;
 
         public ItemsPage()
         {
