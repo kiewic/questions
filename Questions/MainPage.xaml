@@ -10,7 +10,7 @@
 
     <Page.Resources>
         <DataTemplate x:Key="WideWebsite">
-            <Grid x:Name="Foo" HorizontalAlignment="Stretch" Margin="0">
+            <Grid Background="{StaticResource ApplicationPageBackgroundThemeBrush}" HorizontalAlignment="Stretch" Margin="0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="auto" />
                     <ColumnDefinition Width="*" />
@@ -20,6 +20,7 @@
                 <StackPanel Grid.Column="1">
                     <TextBlock FontSize="18" Text="{Binding Name}" />
                     <TextBlock FontSize="14" Text="{Binding Tags}" />
+                    <TextBlock FontSize="14" Text="{Binding BuzzWords}" />
                     <TextBlock FontSize="10" Text="{Binding}" />
                 </StackPanel>
             </Grid>
@@ -35,18 +36,17 @@
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="0" TextAlignment="Center" Margin="0,0,0,20" FontSize="25">These are your sources, we retrieve questions from here:</TextBlock>
             <Border Grid.Row="1" BorderBrush="Black" BorderThickness="3">
-                <ListView x:Name="WebsitesView" ItemTemplate="{StaticResource WideWebsite}" SelectionChanged="WebsitesView_SelectionChanged">
-                    <!-- Keeping this for future reference.-->
-                    <ListView.ItemContainerStyle>
-                        <Style TargetType="ListViewItem">
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                        </Style>
-                    </ListView.ItemContainerStyle>
+                <ListView
+                    x:Name="WebsitesView"
+                    ItemTemplate="{StaticResource WideWebsite}"
+                    ItemContainerStyle="{StaticResource StrechedListViewItemContainer}"
+                    SelectionChanged="WebsitesView_SelectionChanged">
                 </ListView>
             </Border>
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
                 <Button x:Name="AddSiteButton" Style="{StaticResource SettingsButton}" Click="AddSiteButton_Click">Add Site</Button>
                 <Button x:Name="EditTagsButton" Style="{StaticResource SettingsButton}" Click="EditTagsButton_Click" Visibility="Collapsed">Edit Tags</Button>
+                <Button x:Name="EditBuzzWordsButton" Style="{StaticResource SettingsButton}" Click="EditBuzzWordsButton_Click" Visibility="Collapsed">Edit Buzz Words</Button>
                 <Button x:Name="DeleteSiteButton" Style="{StaticResource SettingsButton}" Click="DeleteSiteButton_Click" Visibility="Collapsed">Delete Site</Button>
                 <Button x:Name="DoneButton" Style="{StaticResource SettingsButton}" Click="DoneButton_Click">Done</Button>
             </StackPanel>

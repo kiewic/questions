@@ -9,7 +9,7 @@
 
     <Page.Resources>
         <DataTemplate x:Key="WideWebsite">
-            <Grid x:Name="Foo" HorizontalAlignment="Stretch" Margin="0">
+            <Grid Background="{StaticResource ApplicationPageBackgroundThemeBrush}" HorizontalAlignment="Stretch" Margin="0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="auto" />
                     <ColumnDefinition Width="*" />
@@ -38,7 +38,10 @@
                 <TextBlock Style="{StaticResource SettingsBlock}">Choose a website:</TextBlock>
             </StackPanel>
             <Border Grid.Row="2" Style="{StaticResource SettingsBorder}">
-                <ListView x:Name="WebsiteOptionsView" ItemTemplate="{StaticResource WideWebsite}">
+                <ListView
+                    x:Name="WebsiteOptionsView"
+                    ItemTemplate="{StaticResource WideWebsite}"
+                    ItemContainerStyle="{StaticResource StrechedListViewItemContainer}">
                 </ListView>
             </Border>
             <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">

@@ -20,6 +20,8 @@ namespace QuestionsBackgroundTasks
     {
         private const string LatestPubDateKey = "LatestPubDate";
         private const string LatestQueryDateKey = "LatestQueryDate";
+        private const string FaviconUrlKey = "FaviconUrl";
+        private const string BuzzWordsKey = "BuzzWords";
         private const string WebsitesKey = "Websites";
         private static JsonObject roamingWebsites;
         private static JsonObject localWebsites;
@@ -179,7 +181,7 @@ namespace QuestionsBackgroundTasks
                     roamingWebsiteObject.SetNamedValue("Name", JsonValue.CreateStringValue(websiteOption.ToString()));
                     roamingWebsiteObject.SetNamedValue("ApiSiteParameter", JsonValue.CreateStringValue(websiteOption.ApiSiteParameter));
                     roamingWebsiteObject.SetNamedValue("IconUrl", JsonValue.CreateStringValue(websiteOption.IconUrl));
-                    roamingWebsiteObject.SetNamedValue("FaviconUrl", JsonValue.CreateStringValue(websiteOption.FaviconUrl));
+                    roamingWebsiteObject.SetNamedValue(FaviconUrlKey, JsonValue.CreateStringValue(websiteOption.FaviconUrl));
                     roamingWebsites.SetNamedValue(websiteSiteUrl, roamingWebsiteObject);
 
                     JsonObject localWebsiteObject = new JsonObject();
@@ -222,18 +224,34 @@ namespace QuestionsBackgroundTasks
             return roamingWebsites.Keys;
         }
 
-        internal static string GetWebsiteFaviconUrl(string website)
+        internal static string GetWebsiteFaviconUrl(string websiteUrl)
         {
-            if (roamingWebsites.ContainsKey(website))
+            if (roamingWebsites.ContainsKey(websiteUrl))
             {
-                JsonObject websiteObject = roamingWebsites.GetNamedObject(website);
-                if (websiteObject.ContainsKey("FaviconUrl"))
+                JsonObject websiteObject = roamingWebsites.GetNamedObject(websiteUrl);
+                if (websiteObject.ContainsKey(FaviconUrlKey))
                 {
-                    return websiteObject.GetNamedString("FaviconUrl");
+                    return websiteObject.GetNamedString(FaviconUrlKey);
                 }
             }
 
             return "";
+        }
+
+        internal static JsonArray GetWebsiteBuzzWords(string websiteUrl)
+        {
+            if (roamingWebsites.ContainsKey(websiteUrl))
+            {
+                JsonObject websiteObject = roamingWebsites.GetNamedObject(websiteUrl);
+                if (websiteObject.ContainsKey(BuzzWordsKey))
+                {
+                    return websiteObject.GetNamedArray(BuzzWordsKey);
+                }
+            }
+
+            // Maybe the website was removed, but not all its questions.
+            // Or maybe the website does not have buzz words yet.
+            return new JsonArray();
         }
 
         public static void LoadAndDisplayWebsites(ListView listView)

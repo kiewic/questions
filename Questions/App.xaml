@@ -32,9 +32,20 @@
                 <Setter Property="BorderThickness" Value="2" />
             </Style>
             <Style x:Key="SettingsButton" TargetType="Button">
-                <Setter Property="FontSize" Value="25" />
+                <Setter Property="FontSize" Value="22" />
                 <Setter Property="Margin" Value="0,20,0,0" />
             </Style>
+
+            <!-- ListView's stuff. -->
+            <Style x:Key="StrechedListViewItemContainer" TargetType="ListViewItem">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            </Style>
+            <DataTemplate x:Key="SimpleTextBlock">
+                <Border Background="{StaticResource ApplicationPageBackgroundThemeBrush}">
+                    <TextBlock FontSize="24" Text="{Binding}" />
+                </Border>
+            </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

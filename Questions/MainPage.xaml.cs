@@ -50,11 +50,13 @@ namespace Questions
             if (WebsitesView.SelectedItem != null)
             {
                 EditTagsButton.Visibility = Visibility.Visible;
+                EditBuzzWordsButton.Visibility = Visibility.Visible;
                 DeleteSiteButton.Visibility = Visibility.Visible;
             }
             else
             {
                 EditTagsButton.Visibility = Visibility.Collapsed;
+                EditBuzzWordsButton.Visibility = Visibility.Collapsed;
                 DeleteSiteButton.Visibility = Visibility.Collapsed;
             }
         }
@@ -71,6 +73,15 @@ namespace Questions
                 throw new Exception("No website selected.");
             }
             Frame.Navigate(typeof(TagOptionsPage), WebsitesView.SelectedItem);
+        }
+
+        private void EditBuzzWordsButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (WebsitesView.SelectedItem == null)
+            {
+                throw new Exception("No website selected.");
+            }
+            Frame.Navigate(typeof(BuzzWordsPage), WebsitesView.SelectedItem);
         }
 
         private void DeleteSiteButton_Click(object sender, RoutedEventArgs e)

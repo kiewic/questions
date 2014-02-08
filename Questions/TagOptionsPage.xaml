@@ -7,12 +7,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Page.Resources>
-        <DataTemplate x:Key="WideTag">
-            <TextBlock FontSize="24" Text="{Binding}" />
-        </DataTemplate>
-    </Page.Resources>
-
     <Border Background="{StaticResource ApplicationPageBackgroundThemeBrush}" Padding="25">
         <Grid>
             <Grid.RowDefinitions>
@@ -42,7 +36,7 @@
                     <TextBox Grid.Row="1" x:Name="TagBox" TextChanged="TagBox_TextChanged" KeyDown="TagBox_KeyDown" />
                     <TextBlock Grid.Row="2" Style="{StaticResource SettingsBlock}">Or choose a tag from the list:</TextBlock>
                     <Border Grid.Row="3" Style="{StaticResource SettingsBorder}">
-                        <ListView x:Name="TagOptionsView" ItemTemplate="{StaticResource WideTag}" SelectionChanged="TagOptionsView_SelectionChanged">
+                        <ListView x:Name="TagOptionsView" ItemTemplate="{StaticResource SimpleTextBlock}" SelectionChanged="TagOptionsView_SelectionChanged">
                         </ListView>
                     </Border>
                 </Grid>
@@ -57,7 +51,10 @@
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" Style="{StaticResource SettingsBlock}">Tags already added:</TextBlock>
                     <Border Grid.Row="1" Style="{StaticResource SettingsBorder}">
-                        <ListView x:Name="TagsView" ItemTemplate="{StaticResource WideTag}">
+                        <ListView
+                            x:Name="TagsView"
+                            ItemTemplate="{StaticResource SimpleTextBlock}"
+                            ItemContainerStyle="{StaticResource StrechedListViewItemContainer}">
                         </ListView>
                     </Border>
                 </Grid>

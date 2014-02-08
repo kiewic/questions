@@ -23,6 +23,7 @@ namespace QuestionsBackgroundTasks
 
     public sealed class QuestionsManager
     {
+        private const string SummaryKey = "Summary";
         private const string QuestionsKey = "Questions";
         private const string FileName = "questions.json";
         private static AutoResetEvent addEvent = new AutoResetEvent(true);
@@ -182,6 +183,7 @@ namespace QuestionsBackgroundTasks
 
             questionObject.Add("Website", JsonValue.CreateStringValue(website));
             questionObject.Add("Title", JsonValue.CreateStringValue(item.Title.Text));
+            questionObject.Add(SummaryKey, JsonValue.CreateStringValue(item.Summary.Text));
 
             // TODO: Do we need to use PublihedDate.ToLocalTime(), or can we just work with the standard time?
             questionObject.Add("PubDate", JsonValue.CreateStringValue(item.PublishedDate.ToString()));
@@ -214,18 +216,29 @@ namespace QuestionsBackgroundTasks
             }
 
             JsonObject questionObject = questionsCollection.GetNamedObject(item.Id);
+            AddQuestionResult result = AddQuestionResult.None;
 
             string oldTitle = questionObject.GetNamedString("Title");
             string newTitle = item.Title.Text;
             if (oldTitle != newTitle)
             {
                 questionObject.SetNamedValue("Title", JsonValue.CreateStringValue(newTitle));
-                Debug.WriteLine("Question updated: {0}", item.Id);
-                return AddQuestionResult.Added;
+                Debug.WriteLine("Different title. Question updated: {0}", item.Id);
+                result = AddQuestionResult.Added;
             }
 
-            Debug.WriteLine("Question up to date: {0}", item.Id);
-            return AddQuestionResult.None;
+            string oldSummary = questionObject.GetNamedString(SummaryKey);
+            string newSummary = item.Summary.Text;
+            if (oldSummary != newSummary)
+            {
+                questionObject.SetNamedValue(SummaryKey, JsonValue.CreateStringValue(newTitle));
+                Debug.WriteLine("Different summary. Question updated: {0}", item.Id);
+                result = AddQuestionResult.Added;
+            }
+
+            Debug.WriteLineIf(result == AddQuestionResult.None, "Question up to date: " + item.Id);
+
+            return result;
         }
 
         public static void RemoveQuestionsAndSave(string websiteUrl, string tag)

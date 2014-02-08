@@ -9,6 +9,7 @@ namespace QuestionsBackgroundTasks
 {
     public sealed class BindableQuestion
     {
+        private const string SummaryKey = "Summary";
         private PowerpuffJsonObject json;
         private string id;
 
@@ -124,6 +125,36 @@ namespace QuestionsBackgroundTasks
             get
             {
                 return String.Join(", ", Tags.Keys);
+            }
+        }
+
+        private string[] GetBuzzWords()
+        {
+            List<string> buzzWords = new List<string>();
+
+            string websiteUrl = WebsiteUrl;
+            JsonArray buzzWordsCollection = SettingsManager.GetWebsiteBuzzWords(websiteUrl);
+            string title = Title.ToLower();
+            string summary = json.GetNamedString(SummaryKey).ToLower();
+
+            foreach (IJsonValue jsonValue in buzzWordsCollection)
+            {
+                string originalBuzzWord = jsonValue.GetString();
+                string lowerCaseBuzzWord = originalBuzzWord.ToLower();
+                if (summary.Contains(lowerCaseBuzzWord) && title.Contains(lowerCaseBuzzWord))
+                {
+                    buzzWords.Add(originalBuzzWord);
+                }
+            }
+
+            return buzzWords.ToArray();
+        }
+
+        public string BuzzWordsStrip
+        {
+            get
+            {
+                return String.Join(", ", GetBuzzWords());
             }
         }
     }
