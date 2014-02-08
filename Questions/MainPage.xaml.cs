@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using Windows.Data.Xml.Dom;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.System;
+using Windows.UI.Core;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -112,6 +114,22 @@ namespace Questions
         private void DoneButton_Click(object sender, RoutedEventArgs e)
         {
             Frame.Navigate(typeof(ItemsPage));
+        }
+
+        private void Page_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            var coreWindow = Window.Current.CoreWindow;
+            var downState = CoreVirtualKeyStates.Down;
+            bool menuKey = (coreWindow.GetKeyState(VirtualKey.Menu) & downState) == downState;
+            bool controlKey = (coreWindow.GetKeyState(VirtualKey.Control) & downState) == downState;
+            bool shiftKey = (coreWindow.GetKeyState(VirtualKey.Shift) & downState) == downState;
+            bool onlyMenu = menuKey && !controlKey && !shiftKey;
+
+            // Alt + Right shortcut.
+            if (e.Key == VirtualKey.Right && onlyMenu)
+            {
+                DoneButton_Click(null, null);
+            }
         }
     }
 }
