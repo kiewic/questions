@@ -26,7 +26,8 @@ Stack Overflow; StackOverflow; Stack Exchange; Questions; Reader; StackExchange;
 
 Questions 1.0.6.x notes:
 
-* Adding tags strip per question.
+* Introducing the **BUZZ WORDS** feature.
+* Adding strip of tags per question.
 * Fixing selected question background.
 
 Questions 1.0.5.x notes:

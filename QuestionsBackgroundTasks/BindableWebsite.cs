@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Data.Json;
+using Windows.UI.Popups;
 using Windows.UI.Xaml.Controls;
 
 namespace QuestionsBackgroundTasks
@@ -48,6 +49,8 @@ namespace QuestionsBackgroundTasks
 
         public void AddBuzzWordAndSave(ListView listView, string buzzWord)
         {
+            const int buzzWordsLimit = 20;
+
             JsonArray buzzWordsCollection = roamingJsonObject.GetOrCreateNamedArray(BuzzWordsKey);
 
             IJsonValue selectedValue;
@@ -55,6 +58,18 @@ namespace QuestionsBackgroundTasks
             {
                 // We already have this buzz word.
                 Debug.WriteLine("Buzz word repeated: {0}", buzzWord);
+                return;
+            }
+
+            if (buzzWordsCollection.Count >= buzzWordsLimit)
+            {
+                MessageDialog dialog = new MessageDialog(
+                    String.Format("Only {0} buzz words allowed.", buzzWordsLimit),
+                    "Oops.");
+
+                // Weird, we do not await nor keep a reference to the dialog.
+                var showOperation = dialog.ShowAsync();
+
                 return;
             }
 

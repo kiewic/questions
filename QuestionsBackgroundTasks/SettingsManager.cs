@@ -196,7 +196,9 @@ namespace QuestionsBackgroundTasks
                 }
                 else
                 {
-                    var dialog = new MessageDialog("Only 10 websites allowed.", "Oops.");
+                    MessageDialog dialog = new MessageDialog(
+                        String.Format("Only {0} websites allowed.", websitesLimit),
+                        "Oops.");
                     await dialog.ShowAsync();
 
                     // Make sure to return null.

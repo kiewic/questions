@@ -141,13 +141,21 @@ namespace QuestionsBackgroundTasks
             {
                 string originalBuzzWord = jsonValue.GetString();
                 string lowerCaseBuzzWord = originalBuzzWord.ToLower();
-                if (summary.Contains(lowerCaseBuzzWord) && title.Contains(lowerCaseBuzzWord))
+                if (summary.Contains(lowerCaseBuzzWord) || title.Contains(lowerCaseBuzzWord))
                 {
                     buzzWords.Add(originalBuzzWord);
                 }
             }
 
             return buzzWords.ToArray();
+        }
+
+        public string[] BuzzWords
+        {
+            get
+            {
+                return GetBuzzWords();
+            }
         }
 
         public string BuzzWordsStrip
