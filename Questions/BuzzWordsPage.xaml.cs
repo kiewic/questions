@@ -70,5 +70,15 @@ namespace Questions
                 e.Handled = true;
             }
         }
+
+        private void BuzzWordsView_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == VirtualKey.Delete)
+            {
+                RemoveButton_Click(null, null);
+                BuzzWordsView.Focus(FocusState.Programmatic);
+                e.Handled = true;
+            }
+        }
     }
 }

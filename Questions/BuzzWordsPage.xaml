@@ -11,6 +11,7 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="auto" />
             </Grid.RowDefinitions>
@@ -25,23 +26,28 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="auto" />
-                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBox Grid.Column="0" x:Name="BuzzWordBox" KeyDown="BuzzWordBox_KeyDown" VerticalAlignment="Center" />
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <Button x:Name="AddButton" HorizontalAlignment="Stretch" Style="{StaticResource SettingsButton}" Click="AddButton_Click">Add &gt;</Button>
-                    <Button x:Name="RemoveButton" HorizontalAlignment="Stretch" Style="{StaticResource SettingsButton}" Click="RemoveButton_Click">&lt; Remove</Button>
-                </StackPanel>
-                <Border Grid.Column="2" Style="{StaticResource SettingsBorder}">
+                <Button Grid.Column="1" x:Name="AddButton" Style="{StaticResource SettingsButton}" Margin="0" Click="AddButton_Click">Add &#10003;</Button>
+            </Grid>
+
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="auto" />
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Style="{StaticResource SettingsBorder}">
                     <ListView
                         x:Name="BuzzWordsView"
                         ItemTemplate="{StaticResource SimpleTextBlock}"
-                        ItemContainerStyle="{StaticResource StrechedListViewItemContainer}">
+                        ItemContainerStyle="{StaticResource StrechedListViewItemContainer}"
+                        KeyDown="BuzzWordsView_KeyDown">
                     </ListView>
                 </Border>
+                <Button Grid.Column="1" x:Name="RemoveButton" Style="{StaticResource SettingsButton}" Margin="0" Click="RemoveButton_Click">Remove &#10007;</Button>
             </Grid>
 
-            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
+            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">
                 <Button x:Name="DoneButton" Style="{StaticResource SettingsButton}" Click="DoneButton_Click">Done</Button>
             </StackPanel>
         </Grid>
