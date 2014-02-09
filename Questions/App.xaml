@@ -46,6 +46,19 @@
                     <TextBlock FontSize="24" Text="{Binding}" />
                 </Border>
             </DataTemplate>
+            
+            <!-- BuzzwordTemplate and TagTemplate templates. -->
+            <!-- Zero left margin, so labels align to the left. -->
+            <DataTemplate x:Key="BuzzWordTemplate">
+                <Border Background="Orange" Margin="0,5,5,2" Padding="5,2,5,2">
+                    <TextBlock Text="{Binding}" Foreground="White" FontSize="11" />
+                </Border>
+            </DataTemplate>
+            <DataTemplate x:Key="TagTemplate">
+                <Border Background="WhiteSmoke" Margin="0,5,5,2" Padding="5,2,5,2">
+                    <TextBlock Text="{Binding}" Foreground="Gray" FontSize="11" />
+                </Border>
+            </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

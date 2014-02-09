@@ -158,11 +158,34 @@ namespace QuestionsBackgroundTasks
             }
         }
 
-        public string BuzzWordsStrip
+        // Labels can be buzz words or tags. Buzz words should go first.
+        public BindableLabel[] Labels
         {
             get
             {
-                return String.Join(", ", GetBuzzWords());
+                Queue<BindableLabel> labels = new Queue<BindableLabel>();
+
+                foreach (string buzzWord in BuzzWords)
+                {
+                    BindableLabel label = new BindableLabel 
+                    {
+                        Value = buzzWord,
+                        Type = BindableLabelType.BuzzWord
+                    };
+                    labels.Enqueue(label);
+                }
+
+                foreach (string tag in Tags.Keys)
+                {
+                    BindableLabel label = new BindableLabel
+                    {
+                        Value = tag,
+                        Type = BindableLabelType.Tag
+                    };
+                    labels.Enqueue(label);
+                }
+
+                return labels.ToArray();
             }
         }
     }

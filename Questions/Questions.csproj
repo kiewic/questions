@@ -112,6 +112,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="BindableLabelTemplateSelector.cs" />
     <Compile Include="BuzzWordsPage.xaml.cs">
       <DependentUpon>BuzzWordsPage.xaml</DependentUpon>
     </Compile>

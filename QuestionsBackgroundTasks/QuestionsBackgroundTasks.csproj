@@ -100,6 +100,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AddQuestionsResult.cs" />
+    <Compile Include="BindableLabel.cs" />
     <Compile Include="BindableReadQuestion.cs" />
     <Compile Include="BindableWebsite.cs" />
     <Compile Include="JsonExtensions.cs" />
