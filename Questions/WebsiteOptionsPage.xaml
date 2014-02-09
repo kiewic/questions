@@ -44,7 +44,7 @@
                     ItemContainerStyle="{StaticResource StrechedListViewItemContainer}">
                 </ListView>
             </Border>
-            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">
+            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
                 <Button x:Name="AddButton" Style="{StaticResource SettingsButton}" Click="AddButton_Click">Add</Button>
                 <Button x:Name="CancelButton" Style="{StaticResource SettingsButton}" Click="CancelButton_Click">Cancel</Button>
             </StackPanel>

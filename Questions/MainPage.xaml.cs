@@ -12,6 +12,7 @@ using Windows.Foundation.Collections;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -130,6 +131,12 @@ namespace Questions
             {
                 DoneButton_Click(null, null);
             }
+        }
+
+        private void Page_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            string visualState = ApplicationView.Value.ToString();
+            var x = VisualStateManager.GoToState(this, visualState, false);
         }
     }
 }

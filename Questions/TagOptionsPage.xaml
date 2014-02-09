@@ -40,7 +40,7 @@
                         </ListView>
                     </Border>
                 </Grid>
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,20,0,0">
                     <Button x:Name="AddButton" HorizontalAlignment="Stretch" Style="{StaticResource SettingsButton}" Click="AddButton_Click">Add &gt;</Button>
                     <Button x:Name="RemoveButton" HorizontalAlignment="Stretch" Style="{StaticResource SettingsButton}" Click="RemoveButton_Click">&lt; Remove</Button>
                 </StackPanel>
