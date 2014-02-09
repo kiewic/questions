@@ -36,6 +36,10 @@ namespace Questions
         private BackgroundTaskCompletedEventHandler taskCompletedHandler;
         private TypedEventHandler<ApplicationData, object> dataChangedHandler;
 
+        #if DEBUG
+        private IAsyncOperation<IUICommand> showOperation;
+        #endif
+
         public ItemsPage()
         {
             this.InitializeComponent();
