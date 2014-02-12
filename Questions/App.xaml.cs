@@ -124,6 +124,18 @@ namespace Questions
             args.Request.ApplicationCommands.Add(exportSettingsCommand);
         }
 
+        // TODO: Add an About flyout and display the version.
+        private string GetVersion()
+        {
+            var ver = Windows.ApplicationModel.Package.Current.Id.Version;
+            return String.Format(
+                "Version {0}.{1}.{2}.{3}",
+                ver.Major.ToString(),
+                ver.Minor.ToString(),
+                ver.Build.ToString(),
+                ver.Revision.ToString());
+        }
+
         private void SeeTurorial(IUICommand command)
         {
             Frame rootFrame = Window.Current.Content as Frame;
