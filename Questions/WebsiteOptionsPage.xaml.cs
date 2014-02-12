@@ -45,12 +45,15 @@ namespace Questions
 
         private async void AddButton_Click(object sender, RoutedEventArgs e)
         {
-            BindableWebsiteOption websiteOption = WebsiteOptionsView.SelectedItem as BindableWebsiteOption;
-            BindableWebsite website = await SettingsManager.AddWebsiteAndSave(websiteOption);
-
-            if (website != null)
+            if (WebsiteOptionsView.SelectedItem != null)
             {
-                Frame.Navigate(typeof(TagOptionsPage), website);
+                BindableWebsiteOption websiteOption = WebsiteOptionsView.SelectedItem as BindableWebsiteOption;
+                BindableWebsite website = await SettingsManager.AddWebsiteAndSave(websiteOption);
+
+                if (website != null)
+                {
+                    Frame.Navigate(typeof(TagOptionsPage), website);
+                }
             }
         }
 

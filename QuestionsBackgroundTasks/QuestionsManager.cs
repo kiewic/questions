@@ -170,20 +170,23 @@ namespace QuestionsBackgroundTasks
         }
 
         // NOTE: Adding a single question does not load or save settings. Good for performance.
-        private static AddQuestionResult AddQuestion(string website, SyndicationItem item)
+        private static AddQuestionResult AddQuestion(string websiteUrl, SyndicationItem item)
         {
             // If the latestPubDate validation was skipped, it could happend that que query returns
             // questions we already have.
             if (questionsCollection.ContainsKey(item.Id))
             {
-                return UpdateQuestion(website, item);
+                return UpdateQuestion(websiteUrl, item);
             }
 
             JsonObject questionObject = new JsonObject();
 
-            questionObject.Add("Website", JsonValue.CreateStringValue(website));
-            questionObject.Add("Title", JsonValue.CreateStringValue(item.Title.Text));
-            questionObject.Add(SummaryKey, JsonValue.CreateStringValue(item.Summary.Text));
+            string title = item.Title != null ? item.Title.Text : String.Empty;
+            string summary = item.Summary != null ? item.Summary.Text : String.Empty;
+
+            questionObject.Add("Website", JsonValue.CreateStringValue(websiteUrl));
+            questionObject.Add("Title", JsonValue.CreateStringValue(title));
+            questionObject.Add(SummaryKey, JsonValue.CreateStringValue(summary));
 
             // TODO: Do we need to use PublihedDate.ToLocalTime(), or can we just work with the standard time?
             questionObject.Add("PubDate", JsonValue.CreateStringValue(item.PublishedDate.ToString()));
@@ -218,8 +221,8 @@ namespace QuestionsBackgroundTasks
             JsonObject questionObject = questionsCollection.GetNamedObject(item.Id);
             AddQuestionResult result = AddQuestionResult.None;
 
-            string oldTitle = questionObject.GetNamedString("Title");
-            string newTitle = item.Title.Text;
+            string oldTitle = questionObject.GetNamedStringOrEmptyString("Title");
+            string newTitle = item.Title != null ? item.Title.Text : String.Empty;
             if (oldTitle != newTitle)
             {
                 questionObject.SetNamedValue("Title", JsonValue.CreateStringValue(newTitle));
@@ -227,8 +230,8 @@ namespace QuestionsBackgroundTasks
                 result = AddQuestionResult.Added;
             }
 
-            string oldSummary = questionObject.GetNamedString(SummaryKey);
-            string newSummary = item.Summary.Text;
+            string oldSummary = questionObject.GetNamedStringOrEmptyString(SummaryKey);
+            string newSummary = item.Summary != null ? item.Summary.Text : String.Empty;
             if (oldSummary != newSummary)
             {
                 questionObject.SetNamedValue(SummaryKey, JsonValue.CreateStringValue(newTitle));

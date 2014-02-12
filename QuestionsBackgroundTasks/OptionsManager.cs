@@ -18,7 +18,7 @@ namespace QuestionsBackgroundTasks
     {
         private static StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
         private const string websitesFileName = "sites.json";
-        private const string websitesUriString = "http://api.stackexchange.com/2.1/sites?page=1&pagesize=999&filter=!)Qk)IzwPu2_4AJke)ujE)iqv";
+        private const string websitesUriString = "http://api.stackexchange.com/2.1/sites?page=1&pagesize=999&filter=!)Qk)IzwPu2_4AJke)ujE)iqv&status=401";
         private const string tagsUriString = "http://api.stackexchange.com/2.1/tags?page=1&pagesize=100&order=desc&sort=popular&site={0}&filter=!6UYchuBldenIr";
 
         public static IAsyncAction LoadAndDisplayWebsitesAsync(ListView listView)
@@ -46,7 +46,7 @@ namespace QuestionsBackgroundTasks
                 JsonObject jsonObject;
                 if (!JsonObject.TryParse(content, out jsonObject))
                 {
-                    Debug.WriteLine("Invalid JSON oject: {0}", content);
+                    Debug.WriteLine("Invalid JSON object: {0}", content);
                     return;
                 }
 

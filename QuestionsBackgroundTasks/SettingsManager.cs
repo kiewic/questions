@@ -121,6 +121,7 @@ namespace QuestionsBackgroundTasks
             if (localValues.ContainsKey(WebsitesKey))
             {
                 string jsonString = localValues[WebsitesKey].ToString();
+                Debug.WriteLine("Loading: {0}", jsonString);
                 if (!JsonObject.TryParse(jsonString, out localWebsites))
                 {
                     localWebsites = null;
@@ -159,7 +160,9 @@ namespace QuestionsBackgroundTasks
         //
         public static void SaveLocal()
         {
-            localValues[WebsitesKey] = localWebsites.Stringify();
+            string jsonString = localWebsites.Stringify();
+            Debug.WriteLine("Saving: {0}", jsonString);
+            localValues[WebsitesKey] = jsonString;
         }
 
         public static IAsyncOperation<BindableWebsite> AddWebsiteAndSave(BindableWebsiteOption websiteOption)
