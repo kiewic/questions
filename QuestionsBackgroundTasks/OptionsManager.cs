@@ -20,6 +20,7 @@ namespace QuestionsBackgroundTasks
         private const string websitesFileName = "sites.json";
         private const string websitesUriString = "http://api.stackexchange.com/2.1/sites?page=1&pagesize=999&filter=!)Qk)IzwPu2_4AJke)ujE)iqv&status=401";
         private const string tagsUriString = "http://api.stackexchange.com/2.1/tags?page=1&pagesize=100&order=desc&sort=popular&site={0}&filter=!6UYchuBldenIr";
+        private const string emergencyJsonString = "{\"site_state\":\"normal\",\"favicon_url\":\"http://cdn.sstatic.net/stackoverflow/img/favicon.ico\",\"icon_url\":\"http://cdn.sstatic.net/stackoverflow/img/apple-touch-icon.png\",\"audience\":\"professional and enthusiast programmers\",\"site_url\":\"http://stackoverflow.com\",\"api_site_parameter\":\"stackoverflow\",\"name\":\"Stack Overflow\",\"site_type\":\"main_site\"}";
 
         public static IAsyncAction LoadAndDisplayWebsitesAsync(ListView listView)
         {
@@ -134,6 +135,17 @@ namespace QuestionsBackgroundTasks
             }
 
             return "";
+        }
+
+        // This method should be called when the StackExchange API refuses to pprovide data.
+        public static void LoadAndDisplayEmergencyWebsites(ListView listView)
+        {
+            JsonObject jsonObject = JsonObject.Parse(emergencyJsonString);
+            var option = new BindableWebsiteOption(jsonObject);
+            if (option.IsListable)
+            {
+                listView.Items.Add(option);
+            }
         }
     }
 }

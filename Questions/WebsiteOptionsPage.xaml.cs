@@ -13,6 +13,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
@@ -39,6 +40,18 @@ namespace Questions
             LoadingBar.ShowPaused = false;
 
             await OptionsManager.LoadAndDisplayWebsitesAsync(WebsiteOptionsView);
+
+            if (WebsiteOptionsView.Items.Count == 0)
+            {
+                BusyWarning.Visibility = Visibility.Visible;
+                Storyboard fadeInStoryboard = this.Resources["FadeInStoryboard"] as Storyboard;
+                if (fadeInStoryboard != null)
+                {
+                    fadeInStoryboard.Begin();
+                }
+
+                OptionsManager.LoadAndDisplayEmergencyWebsites(WebsiteOptionsView);
+            }
 
             LoadingBar.ShowPaused = true;
         }

@@ -8,13 +8,24 @@
     mc:Ignorable="d">
 
     <Page.Resources>
+        <Style x:Key="WarningBorder" TargetType="Border">
+            <Setter Property="Background" Value="Goldenrod" />
+            <Setter Property="Margin" Value="0,5,0,5" />
+            <Setter Property="Padding" Value="5" />
+            <Setter Property="Visibility" Value="Collapsed" />
+        </Style>
+        <Style x:Key="WarningBlock" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="TextAlignment" Value="Center" />
+        </Style>
         <DataTemplate x:Key="WideWebsite">
             <Grid Background="{StaticResource ApplicationPageBackgroundThemeBrush}" HorizontalAlignment="Stretch" Margin="0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Image Grid.Column="0" Width="50" Height="50" Margin="0,0,20,0" Source="Assets/IconPLaceholder.png" />
+                <Image Grid.Column="0" Width="50" Height="50" Margin="0,0,20,0" Source="Assets/IconPlaceholder.png" />
                 <Image Grid.Column="0" Width="50" Height="50" Margin="0,0,20,0" Source="{Binding IconUrl}" />
                 <StackPanel Grid.Column="1">
                     <TextBlock FontSize="18" Text="{Binding}" />
@@ -23,11 +34,18 @@
                 </StackPanel>
             </Grid>
         </DataTemplate>
+        <Storyboard x:Name="FadeInStoryboard">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="BusyWarning">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:1" Value="1"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
     </Page.Resources>
 
     <Border Background="{StaticResource ApplicationPageBackgroundThemeBrush}" Padding="25">
         <Grid>
             <Grid.RowDefinitions>
+                <RowDefinition Height="auto" />
                 <RowDefinition Height="auto" />
                 <RowDefinition Height="auto" />
                 <RowDefinition Height="*" />
@@ -37,14 +55,17 @@
             <StackPanel Grid.Row="1">
                 <TextBlock Style="{StaticResource SettingsBlock}">Choose a website:</TextBlock>
             </StackPanel>
-            <Border Grid.Row="2" Style="{StaticResource SettingsBorder}">
+            <Border Grid.Row="2" x:Name="BusyWarning" Style="{StaticResource WarningBorder}">
+                <TextBlock Style="{StaticResource WarningBlock}">StackExchange is busy. Try again later.</TextBlock>
+            </Border>
+            <Border Grid.Row="3" Style="{StaticResource SettingsBorder}">
                 <ListView
                     x:Name="WebsiteOptionsView"
                     ItemTemplate="{StaticResource WideWebsite}"
                     ItemContainerStyle="{StaticResource StrechedListViewItemContainer}">
                 </ListView>
             </Border>
-            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+            <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
                 <Button x:Name="AddButton" Style="{StaticResource SettingsButton}" Click="AddButton_Click">Add</Button>
                 <Button x:Name="CancelButton" Style="{StaticResource SettingsButton}" Click="CancelButton_Click">Cancel</Button>
             </StackPanel>
