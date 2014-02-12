@@ -24,6 +24,10 @@ Stack Overflow; StackOverflow; Stack Exchange; Questions; Reader; StackExchange;
 
 ### Notes
 
+Questions 1.0.7.x notes:
+
+* Bug fixes.
+
 Questions 1.0.6.x notes:
 
 * Introducing the **BUZZ WORDS** feature.
