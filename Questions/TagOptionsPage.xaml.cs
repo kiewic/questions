@@ -106,6 +106,12 @@ namespace Questions
             Frame.Navigate(typeof(MainPage));
         }
 
+        private async void TagsHyperlink_Click(object sender, RoutedEventArgs e)
+        {
+            Uri tagsUri = new Uri(website.ToString() + "/tags");
+            bool reslt = await Launcher.LaunchUriAsync(tagsUri);
+        }
+
         private void TagOptionsView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             TagBox.Text = "";

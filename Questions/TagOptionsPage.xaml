@@ -13,6 +13,7 @@
                 <RowDefinition Height="auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
             </Grid.RowDefinitions>
             <ProgressBar x:Name="LoadingBar" Style="{StaticResource SettingsProgress}"/>
             <Grid Grid.Row="1">
@@ -27,11 +28,12 @@
                         <RowDefinition Height="auto" />
                         <RowDefinition Height="auto" />
                         <RowDefinition Height="*" />
+                        <RowDefinition Height="auto" />
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center">
                         <TextBlock Style="{StaticResource SettingsBlock}" Margin="0,10,10,10">Write a tag for</TextBlock>
                         <TextBlock Style="{StaticResource SettingsBlock}" x:Name="WebsiteBlock" />
-                        <TextBlock Style="{StaticResource SettingsBlock}">:</TextBlock>
+                        <TextBlock Style="{StaticResource SettingsBlock}">:*</TextBlock>
                     </StackPanel>
                     <TextBox Grid.Row="1" x:Name="TagBox" TextChanged="TagBox_TextChanged" KeyDown="TagBox_KeyDown" />
                     <TextBlock Grid.Row="2" Style="{StaticResource SettingsBlock}">Or choose a tag from the list:</TextBlock>
@@ -39,6 +41,7 @@
                         <ListView x:Name="TagOptionsView" ItemTemplate="{StaticResource SimpleTextBlock}" SelectionChanged="TagOptionsView_SelectionChanged">
                         </ListView>
                     </Border>
+                    <HyperlinkButton Grid.Row="4" x:Name="TagsHyperlink" Click="TagsHyperlink_Click">See complete list of tags. &#x21d7;</HyperlinkButton>
                 </Grid>
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,20,0,0">
                     <Button x:Name="AddButton" HorizontalAlignment="Stretch" Style="{StaticResource SettingsButton}" Click="AddButton_Click">Add &gt;</Button>
@@ -59,9 +62,10 @@
                     </Border>
                 </Grid>
             </Grid>
-            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
                 <Button x:Name="DoneButton" Style="{StaticResource SettingsButton}" Click="DoneButton_Click">Done</Button>
             </StackPanel>
+            <TextBlock Grid.Row="3">* <Bold>Tags</Bold> are optional.</TextBlock>
         </Grid>
     </Border>
 </Page>
