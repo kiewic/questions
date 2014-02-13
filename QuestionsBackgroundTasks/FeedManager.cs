@@ -106,7 +106,7 @@ namespace QuestionsBackgroundTasks
         }
 
         public static IAsyncOperation<AddQuestionsResult> QuerySingleWebsiteAsync(
-            string website,
+            string websiteUrl,
             string query,
             bool skipLatestPubDate)
         {
@@ -115,7 +115,7 @@ namespace QuestionsBackgroundTasks
                 AddQuestionsResult result = new AddQuestionsResult();
 
                 Uri uri;
-                if (!SettingsManager.TryCreateUri(website, query, out uri))
+                if (!SettingsManager.TryCreateUri(websiteUrl, query, out uri))
                 {
                     Debugger.Break();
                 }
@@ -128,16 +128,23 @@ namespace QuestionsBackgroundTasks
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine(ex);
+                    Debug.WriteLine("{0} {1}", websiteUrl, ex.Message);
 
                     int hr = ex.HResult;
                     int facility = (hr & 0x7FFF0000) / 0xFFFF;
                     int error = hr & 0xFFFF;
+                    const int WEB_E_INVALID_XML = unchecked((int)0x83750002);
                     const int FACILITY_WIN32 = 7;
                     const int FACILITY_HTTP = 25;
                     const int NOT_FOUND = 404;
 
-                    if (facility == FACILITY_HTTP && error == NOT_FOUND)
+                    if (hr == WEB_E_INVALID_XML)
+                    {
+                        // An invalid XML is equivalent to file not found.
+                        result.FileFound = false;
+                        return result;
+                    }
+                    else if (facility == FACILITY_HTTP && error == NOT_FOUND)
                     {
                         result.FileFound = false;
                         return result;
@@ -160,7 +167,7 @@ namespace QuestionsBackgroundTasks
                     }
                 }
 
-                result = QuestionsManager.AddQuestions(website, feed, skipLatestPubDate);
+                result = QuestionsManager.AddQuestions(websiteUrl, feed, skipLatestPubDate);
                 result.FileFound = true;
                 return result;
             });

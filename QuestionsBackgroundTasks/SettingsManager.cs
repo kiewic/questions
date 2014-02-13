@@ -370,8 +370,8 @@ namespace QuestionsBackgroundTasks
             if (!JsonObject.TryParse(jsonString, out jsonObject))
             {
                 // Invalid JSON string.
-                // TODO: Notify user there was an error importing settings.
-                Debugger.Break();
+                var dialog = new MessageDialog("Invalid JSON object.", "Error");
+                await dialog.ShowAsync();
                 return;
             }
 
