@@ -33,7 +33,7 @@ namespace QuestionsBackgroundTasks
 
                 if (!JsonObject.TryParse(jsonString, out rootObject))
                 {
-                    Debug.WriteLine("Invalid JSON object: {0}", jsonString);
+                    Debug.WriteLine("Invalid JSON object in {0}", FileName);
                     CreateFromScratch();
                     return;
                 }

@@ -47,7 +47,7 @@ namespace QuestionsBackgroundTasks
                 JsonObject jsonObject;
                 if (!JsonObject.TryParse(content, out jsonObject))
                 {
-                    Debug.WriteLine("Invalid JSON object: {0}", content);
+                    Debug.WriteLine("Invalid JSON object in {0}", websitesFileName);
                     return;
                 }
 

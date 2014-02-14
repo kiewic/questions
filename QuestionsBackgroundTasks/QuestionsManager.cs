@@ -45,7 +45,7 @@ namespace QuestionsBackgroundTasks
 
                 if (!JsonObject.TryParse(jsonString, out rootObject))
                 {
-                    Debug.WriteLine("Invalid JSON object: {0}", jsonString);
+                    Debug.WriteLine("Invalid JSON object in {0}", FileName);
                     CreateFromScratch();
                     return;
                 }
@@ -86,6 +86,7 @@ namespace QuestionsBackgroundTasks
 
             DateTimeOffset latestPubDate = SettingsManager.GetLastestPubDate(websiteUrl);
             DateTimeOffset newLatestPubDate = DateTimeOffset.MinValue;
+            Debug.WriteLine("{0} Current LastestPubDate is {1}.", websiteUrl, latestPubDate);
 
             // Wait until the event is set by another thread.
             addEvent.WaitOne();
@@ -105,7 +106,7 @@ namespace QuestionsBackgroundTasks
                         if (result == AddQuestionResult.Added && item.PublishedDate > newLatestPubDate)
                         {
                             newLatestPubDate = item.PublishedDate;
-                            Debug.WriteLine("New {0} LastestPubDate: {1}", websiteUrl, newLatestPubDate);
+                            Debug.WriteLine("{0} New LastestPubDate is {1}.", websiteUrl, newLatestPubDate);
                         }
                     }
                     else
@@ -188,7 +189,7 @@ namespace QuestionsBackgroundTasks
             questionObject.Add("Title", JsonValue.CreateStringValue(title));
             questionObject.Add(SummaryKey, JsonValue.CreateStringValue(summary));
 
-            // TODO: Do we need to use PublihedDate.ToLocalTime(), or can we just work with the standard time?
+            // TODO: Do we need to use PublishedDate.ToLocalTime(), or can we just work with the standard time?
             questionObject.Add("PubDate", JsonValue.CreateStringValue(item.PublishedDate.ToString()));
 
             if (item.Links.Count > 0)
@@ -206,7 +207,7 @@ namespace QuestionsBackgroundTasks
 
             questionsCollection.Add(item.Id, questionObject);
 
-            Debug.WriteLine("New question: {0}", item.Id);
+            Debug.WriteLine("{0} New question. PubDate is {1}.", item.Id, item.PublishedDate);
             return AddQuestionResult.Added;
         }
 
@@ -214,7 +215,7 @@ namespace QuestionsBackgroundTasks
         {
             if (!questionsCollection.ContainsKey(item.Id))
             {
-                Debug.WriteLine("Question skipped: {0}", item.Id);
+                Debug.WriteLine("{0} Skipped question.", item.Id);
                 return AddQuestionResult.None;
             }
 
@@ -226,8 +227,8 @@ namespace QuestionsBackgroundTasks
             if (oldTitle != newTitle)
             {
                 questionObject.SetNamedValue("Title", JsonValue.CreateStringValue(newTitle));
-                Debug.WriteLine("Different title. Question updated: {0}", item.Id);
-                result = AddQuestionResult.Added;
+                Debug.WriteLine("{0} Updated question. Different title.", item.Id);
+                result = AddQuestionResult.Updated;
             }
 
             string oldSummary = questionObject.GetNamedStringOrEmptyString(SummaryKey);
@@ -235,11 +236,13 @@ namespace QuestionsBackgroundTasks
             if (oldSummary != newSummary)
             {
                 questionObject.SetNamedValue(SummaryKey, JsonValue.CreateStringValue(newTitle));
-                Debug.WriteLine("Different summary. Question updated: {0}", item.Id);
-                result = AddQuestionResult.Added;
+                Debug.WriteLine("{0} Updated question. Different summary.", item.Id);
+                result = AddQuestionResult.Updated;
             }
 
-            Debug.WriteLineIf(result == AddQuestionResult.None, "Question up to date: " + item.Id);
+            Debug.WriteLineIf(
+                result == AddQuestionResult.None,
+                String.Format("{0} Skipped question. Up to date.", item.Id));
 
             return result;
         }

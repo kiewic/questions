@@ -370,7 +370,7 @@ namespace QuestionsBackgroundTasks
             if (!JsonObject.TryParse(jsonString, out jsonObject))
             {
                 // Invalid JSON string.
-                var dialog = new MessageDialog("Invalid JSON object.", "Error");
+                var dialog = new MessageDialog(String.Format("Invalid JSON object in {0}", file.DisplayName), "Uh Oh");
                 await dialog.ShowAsync();
                 return;
             }
